@@ -18,6 +18,7 @@ import { Project } from '@/types/project';
 import { useForm } from '@inertiajs/react';
 import { LoaderCircleIcon } from 'lucide-react';
 import { FormEvent, ReactNode, useState } from 'react';
+import RolePermissions from '@/pages/projects/components/role-permissions';
 
 export default function Invite({ project, onInviteSent, children }: { project: Project; onInviteSent?: () => void; children: ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -67,6 +68,7 @@ export default function Invite({ project, onInviteSent, children }: { project: P
               </Select>
               <InputError message={form.errors.role} />
             </FormField>
+            <RolePermissions />
           </FormFields>
         </Form>
         <DialogFooter>
