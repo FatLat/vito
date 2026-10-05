@@ -8,6 +8,7 @@ use App\Enums\UserRole;
 use App\Enums\WorkerStatus;
 use App\Events\SocketEvent;
 use App\Facades\SSH;
+use App\Jobs\Site\RollbackJob;
 use App\Models\Deployment;
 use App\Models\EnvVersion;
 use App\Models\GitHook;
@@ -1659,4 +1660,57 @@ test('an env version of another site cannot be restored', function () {
         'site' => $this->site,
         'envVersion' => $version,
     ]))->assertNotFound();
+});
+
+test('application page shows who triggered each deployment', function () {
+    $this->actingAs($this->user);
+
+    Deployment::factory()->create([
+        'site_id' => $this->site->id,
+        'user_id' => $this->user->id,
+        'trigger' => DeploymentTrigger::WEBHOOK,
+        'rolled_back_by_id' => $this->user->id,
+        'rolled_back_at' => now(),
+    ]);
+
+    $this->get(route('application', [
+        'server' => $this->server,
+        'site' => $this->site,
+    ]))
+        ->assertSuccessful()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('deployments.data.0.deployed_by', $this->user->name)
+            ->where('deployments.data.0.trigger', 'webhook')
+            ->where('deployments.data.0.rolled_back_by', $this->user->name)
+        );
+});
+
+test('deployment triggers have a label and color', function (DeploymentTrigger $trigger, string $color) {
+    expect($trigger->getText())->toBe($trigger->value);
+    expect($trigger->getColor())->toBe($color);
+})->with([
+    [DeploymentTrigger::MANUAL, 'gray'],
+    [DeploymentTrigger::API, 'info'],
+    [DeploymentTrigger::WEBHOOK, 'success'],
+    [DeploymentTrigger::WORKFLOW, 'warning'],
+]);
+
+test('a failed rollback clears who rolled back', function () {
+    SSH::fake();
+    Notification::fake();
+
+    $deployment = Deployment::factory()->create([
+        'site_id' => $this->site->id,
+        'status' => DeploymentStatus::DEPLOYING,
+        'release' => '20240901000000',
+        'rolled_back_by_id' => $this->user->id,
+        'rolled_back_at' => now(),
+    ]);
+
+    (new RollbackJob($deployment))->failed(new Exception('release failed'));
+
+    $deployment->refresh();
+    expect($deployment->status)->toBe(DeploymentStatus::FAILED);
+    expect($deployment->rolled_back_by_id)->toBeNull();
+    expect($deployment->rolled_back_at)->toBeNull();
 });

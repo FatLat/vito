@@ -24,11 +24,15 @@ import { cn, rowId } from '@/lib/utils';
 type ParsedVariable = { key: string; value: string; is_secret: boolean };
 
 const envValue = (pairs: Array<{ key: string; value: string }>, key: string): string =>
-  (pairs.find((pair) => pair.key.trim() === key)?.value ?? '').trim().replace(/^["']|["']$/g, '').toLowerCase();
+  ([...pairs].reverse().find((pair) => pair.key.trim() === key)?.value ?? '')
+    .replace(/\s+#.*$/, '')
+    .trim()
+    .replace(/^["']|["']$/g, '')
+    .toLowerCase();
 
 const rawPairs = (content: string): Array<{ key: string; value: string }> =>
   content.split(/\r?\n/).flatMap((line) => {
-    const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=(.*)$/);
+    const match = line.match(/^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=(.*)$/);
     return match ? [{ key: match[1], value: match[2] }] : [];
   });
 
@@ -393,6 +397,7 @@ export default function Env({ site, children }: { site: Site; children: ReactNod
                     onClick={() => setShowHistory((value) => !value)}
                     disabled={pathUncommitted}
                     aria-pressed={showHistory}
+                    aria-label="History"
                   >
                     <HistoryIcon />
                   </Button>
@@ -405,7 +410,12 @@ export default function Env({ site, children }: { site: Site; children: ReactNod
           <div className={cn('flex min-h-0 flex-1 flex-col gap-4', mode === 'classic' ? 'overflow-hidden' : 'overflow-y-auto')}>
             {showHistory && canEdit === true && !pathUncommitted && (
               <div className="shrink-0">
-                <EnvHistory site={site} path={committedPath} onRestored={() => query.refetch()} />
+                <EnvHistory
+                  site={site}
+                  path={committedPath}
+                  hasUnsavedChanges={variablesDirty || (mode === 'classic' && rawContent !== (query.data?.env ?? ''))}
+                  onRestored={() => query.refetch()}
+                />
               </div>
             )}
             {debugInProduction && (

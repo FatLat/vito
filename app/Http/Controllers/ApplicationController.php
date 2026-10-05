@@ -195,16 +195,17 @@ class ApplicationController extends Controller
      * @throws ValidationException
      */
     #[Post('/env/versions/{envVersion}/restore', name: 'application.restore-env-version')]
-    public function restoreEnvVersion(Server $server, Site $site, EnvVersion $envVersion): RedirectResponse
+    public function restoreEnvVersion(Server $server, Site $site, int $envVersion): RedirectResponse
     {
         $this->authorize('update', [$site, $server]);
         $this->authorize('revealEnv', [$site, $server]);
 
-        abort_unless($envVersion->site_id === $site->id, 404);
+        /** @var EnvVersion $version */
+        $version = $site->envVersions()->findOrFail($envVersion);
 
         app(UpdateEnv::class)->update($site, [
-            'env' => $envVersion->content,
-            'path' => $envVersion->path,
+            'env' => $version->content,
+            'path' => $version->path,
         ], user());
 
         return back()->with('success', '.env file restored.');

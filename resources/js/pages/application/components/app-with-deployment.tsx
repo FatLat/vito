@@ -50,7 +50,7 @@ const deployedByCell = ({ row }: CellRenderProps) => {
     <div className="flex flex-col gap-1">
       <div className="inline-flex items-center gap-2">
         {(row.deployed_by as string | null) ?? <span className="text-muted-foreground">-</span>}
-        {trigger && trigger !== 'manual' && <Badge variant="outline">{trigger}</Badge>}
+        {trigger && trigger !== 'manual' && <Badge variant="outline">{trigger.charAt(0).toUpperCase() + trigger.slice(1)}</Badge>}
       </div>
       {rolledBackBy && <span className="text-muted-foreground text-xs">Rolled back by {rolledBackBy}</span>}
     </div>

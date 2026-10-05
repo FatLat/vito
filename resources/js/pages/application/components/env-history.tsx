@@ -6,16 +6,19 @@ import { LoaderCircleIcon } from 'lucide-react';
 import DateTime from '@/components/date-time';
 import { Button } from '@/components/ui/button';
 import { Site } from '@/types/site';
+import { EnvVersion } from '@/types/env';
 
-type EnvVersion = {
-  id: number;
-  site_id: number;
+export default function EnvHistory({
+  site,
+  path,
+  hasUnsavedChanges,
+  onRestored,
+}: {
+  site: Site;
   path: string;
-  user: string | null;
-  created_at: string;
-};
-
-export default function EnvHistory({ site, path, onRestored }: { site: Site; path: string; onRestored: () => void }) {
+  hasUnsavedChanges: boolean;
+  onRestored: () => void;
+}) {
   const [confirmingId, setConfirmingId] = useState<number | null>(null);
   const [restoringId, setRestoringId] = useState<number | null>(null);
 
@@ -38,19 +41,21 @@ export default function EnvHistory({ site, path, onRestored }: { site: Site; pat
       {
         preserveScroll: true,
         onSuccess: () => {
+          setConfirmingId(null);
           query.refetch();
           onRestored();
         },
-        onFinish: () => {
-          setRestoringId(null);
-          setConfirmingId(null);
-        },
+        onFinish: () => setRestoringId(null),
       },
     );
   };
 
   if (query.isLoading) {
     return <p className="text-muted-foreground text-sm">Loading history...</p>;
+  }
+
+  if (query.isError) {
+    return <p className="text-destructive text-sm">Failed to load the history of this file.</p>;
   }
 
   if (versions.length === 0) {
@@ -67,6 +72,7 @@ export default function EnvHistory({ site, path, onRestored }: { site: Site; pat
           </div>
           {confirmingId === version.id ? (
             <div className="flex items-center gap-2">
+              {hasUnsavedChanges && <span className="text-muted-foreground text-xs">Unsaved changes will be lost.</span>}
               <Button type="button" size="sm" variant="outline" onClick={() => setConfirmingId(null)} disabled={restoringId !== null}>
                 Cancel
               </Button>

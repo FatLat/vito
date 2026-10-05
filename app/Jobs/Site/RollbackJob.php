@@ -53,6 +53,8 @@ class RollbackJob implements ShouldQueue
         $site = $this->deployment->site;
 
         $this->deployment->status = DeploymentStatus::FAILED;
+        $this->deployment->rolled_back_by_id = null;
+        $this->deployment->rolled_back_at = null;
         $this->deployment->save();
         $this->deployment->log?->write("Rollback failed: {$e->getMessage()}");
         $this->broadcastDeploymentUpdate();
