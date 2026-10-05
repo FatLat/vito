@@ -1,15 +1,28 @@
-$ErrorActionPreference = 'Stop'
+param(
+    [string]$Image = 'ghcr.io/fatlat/vito:latest'
+)
 
-$image = 'ghcr.io/fatlat/vito:latest'
 $envFile = Join-Path $env:USERPROFILE '.vito\vito.env'
 
 if (-not (Test-Path $envFile)) {
-    throw "Vito env file not found: $envFile"
+    Write-Error "Vito env file not found: $envFile"
+    exit 1
 }
 
-$currentEnv = docker inspect vito --format '{{range .Config.Env}}{{println .}}{{end}}' 2>$null
-$email = ($currentEnv | Where-Object { $_ -like 'EMAIL=*' } | Select-Object -First 1) -replace '^EMAIL=', ''
-$name = ($currentEnv | Where-Object { $_ -like 'NAME=*' } | Select-Object -First 1) -replace '^NAME=', ''
+docker pull $Image
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Could not pull $Image. The running Vito container was left untouched."
+    exit 1
+}
+
+$email = $null
+$name = $null
+$existing = docker ps -a --filter 'name=^vito$' --format '{{.Names}}'
+if ($existing) {
+    $currentEnv = docker inspect vito --format '{{range .Config.Env}}{{println .}}{{end}}'
+    $email = ($currentEnv | Where-Object { $_ -like 'EMAIL=*' } | Select-Object -First 1) -replace '^EMAIL=', ''
+    $name = ($currentEnv | Where-Object { $_ -like 'NAME=*' } | Select-Object -First 1) -replace '^NAME=', ''
+}
 
 if (-not $email) {
     $email = Read-Host 'Vito admin e-postasi'
@@ -18,9 +31,9 @@ if (-not $name) {
     $name = 'Latif'
 }
 
-docker pull $image
-
-docker rm -f vito 2>$null | Out-Null
+if ($existing) {
+    docker rm -f vito | Out-Null
+}
 
 docker run -d --name vito --restart unless-stopped `
     --env-file $envFile `
@@ -30,6 +43,11 @@ docker run -d --name vito --restart unless-stopped `
     -p 127.0.0.1:8090:80 `
     -v vito_storage:/var/www/html/storage `
     -v vito_plugins:/var/www/html/app/Vito/Plugins `
-    $image
+    $Image
 
-Write-Host "Vito $image ile yeniden baslatildi: http://localhost:8090"
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Could not start $Image. Run this script again with -Image vitodeploy/vito:latest to go back."
+    exit 1
+}
+
+Write-Host "Vito started with $Image at http://localhost:8090"

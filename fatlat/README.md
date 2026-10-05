@@ -17,8 +17,11 @@ Bir kez:
 
 Her güncellemede:
 ```powershell
+git pull
 powershell -ExecutionPolicy Bypass -File fatlat\update-vito.ps1
 ```
+İmaj indirilemezse betik çalışan Vito'ya dokunmaz. Resmi imaja geri dönmek için: `-Image vitodeploy/vito:latest`.
+
 Veriler (`vito_storage`, `vito_plugins` volume'leri) ve `%USERPROFILE%\.vito\vito.env` korunur. Betik mevcut konteynerdeki admin e-postasını kullanır; Vito yeni kullanıcı açmaz.
 
 ## Resmi Vito ile senkron
