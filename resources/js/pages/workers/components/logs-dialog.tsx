@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import LogOutput from '@/components/log-output';
+import AnsiText from '@/components/ansi-text';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
@@ -29,7 +30,7 @@ export default function WorkerLogsDialog({ open, onOpenChange, serverId, workerI
           <DialogTitle>Worker logs</DialogTitle>
           <DialogDescription className="sr-only">View worker logs</DialogDescription>
         </DialogHeader>
-        <LogOutput>{query.isLoading ? 'Loading...' : query.data}</LogOutput>
+        <LogOutput>{query.isLoading ? 'Loading...' : <AnsiText text={query.data ?? ''} />}</LogOutput>
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline">Close</Button>

@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import LogOutput from '@/components/log-output';
+import AnsiText from '@/components/ansi-text';
 import { useLogContent } from '@/hooks/use-log-content';
 
 type LogViewerDialogProps = {
@@ -25,7 +26,7 @@ export default function LogViewerDialog({ open, onOpenChange, serverId, logId, t
           <>
             {isLoading && 'Loading...'}
             {error && <div className="text-destructive">Error: {error}</div>}
-            {content && !error && content}
+            {content && !error && <AnsiText text={content} />}
           </>
         </LogOutput>
         <DialogFooter>
