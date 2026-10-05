@@ -5,6 +5,7 @@ namespace App\Actions\Site;
 use App\Models\EnvVersion;
 use App\Models\Site;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class RecordEnvVersion
 {
@@ -18,6 +19,13 @@ class RecordEnvVersion
             return;
         }
 
+        DB::transaction(function () use ($site, $path, $previousContent, $user): void {
+            $this->store($site, $path, $previousContent, $user);
+        });
+    }
+
+    private function store(Site $site, string $path, string $previousContent, ?User $user): void
+    {
         EnvVersion::query()->create([
             'site_id' => $site->id,
             'user_id' => $user?->id,

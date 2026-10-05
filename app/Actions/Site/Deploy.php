@@ -63,7 +63,7 @@ class Deploy
 
     private function broadcastDeploymentCreated(Site $site, Deployment $deployment): void
     {
-        $deployment->loadMissing('log');
+        $deployment->loadMissing(['log', 'user', 'rolledBackBy']);
 
         SocketEvent::dispatch(new SocketEventDTO(
             projectId: $site->server->project_id,

@@ -6,6 +6,7 @@ use App\Exceptions\SSHError;
 use App\Helpers\EnvParser;
 use App\Models\Site;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -51,17 +52,19 @@ class UpdateEnv
 
         $variables = $this->resolveVariables($site, $input, $path, $hasVariables);
         $content = $hasVariables ? EnvParser::stringify($variables) : trim((string) ($input['env'] ?? null));
-        $previousContent = $site->getEnv($path);
+        $previousContent = $site->server->os()->readFile($path);
 
         $site->server->os()->write($path, $content, $site->user);
 
-        if (trim($previousContent) !== trim($content)) {
-            app(RecordEnvVersion::class)->record($site, $path, $previousContent, $user);
-        }
+        DB::transaction(function () use ($site, $path, $previousContent, $content, $user, $variables): void {
+            if (trim($previousContent) !== trim($content)) {
+                app(RecordEnvVersion::class)->record($site, $path, $previousContent, $user);
+            }
 
-        $site->env_variables = $this->secretKeys($variables);
-        $site->jsonUpdate('type_data', 'env_path', $path, save: false);
-        $site->save();
+            $site->env_variables = $this->secretKeys($variables);
+            $site->jsonUpdate('type_data', 'env_path', $path, save: false);
+            $site->save();
+        });
     }
 
     /**
