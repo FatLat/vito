@@ -35,11 +35,14 @@ if ($existing) {
     docker rm -f vito | Out-Null
 }
 
+$runArgs = @('-e', "NAME=$name", '-e', "EMAIL=$email")
+if (-not $existing) {
+    $runArgs += @('-e', "PASSWORD=$(Read-Host 'Vito admin sifresi (yalnizca ilk kurulumda kullanilir)')")
+}
+
 docker run -d --name vito --restart unless-stopped `
     --env-file $envFile `
-    -e "NAME=$name" `
-    -e "EMAIL=$email" `
-    -e "PASSWORD=$([guid]::NewGuid())" `
+    @runArgs `
     -p 127.0.0.1:8090:80 `
     -v vito_storage:/var/www/html/storage `
     -v vito_plugins:/var/www/html/app/Vito/Plugins `
