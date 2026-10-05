@@ -4,9 +4,14 @@ namespace App\Actions\Site;
 
 use App\Actions\CronJob\CreateCronJob;
 use App\Actions\Database\CreateDatabase;
+use App\Actions\Database\CreateDatabaseUser;
+use App\Actions\Database\LinkUser;
 use App\Actions\Worker\CreateWorker;
+use App\Enums\CronjobStatus;
+use App\Enums\DatabaseUserPermission;
 use App\Exceptions\SSHError;
 use App\Models\Database;
+use App\Models\DatabaseUser;
 use App\Models\Site;
 use App\Services\Database\Mariadb;
 use App\Services\Database\Postgresql;
@@ -82,6 +87,10 @@ class SetUpLaravelApp
     }
 
     /**
+     * Creates whatever is missing of the database, its user and the link between
+     * them, and returns the credentials. A retried installation reuses the stored
+     * password, so .env always receives working values.
+     *
      * @return array<string, string>
      *
      * @throws ValidationException
@@ -91,10 +100,6 @@ class SetUpLaravelApp
         $server = $site->server;
         $name = self::databaseName($site);
 
-        if (Database::query()->where('server_id', $server->id)->where('name', $name)->exists()) {
-            return [];
-        }
-
         $service = $server->database();
         if (! $service) {
             throw ValidationException::withMessages([
@@ -103,17 +108,31 @@ class SetUpLaravelApp
         }
 
         $handler = $service->handler();
-        $charset = (string) ($service->type_data['defaultCharset'] ?? '') ?: $this->defaultCharset($handler);
-        $collation = (string) ($service->type_data['charsets'][$charset]['default'] ?? '') ?: $this->defaultCollation($handler);
-        $password = Str::random(32);
+        $databaseUser = DatabaseUser::query()->where('server_id', $server->id)->where('username', $name)->first();
+        $databaseExists = Database::query()->where('server_id', $server->id)->where('name', $name)->exists();
 
-        app(CreateDatabase::class)->create($server, [
-            'name' => $name,
-            'charset' => $charset,
-            'collation' => $collation,
-            'username' => $name,
-            'password' => $password,
-        ]);
+        if (! $databaseExists) {
+            $charset = (string) ($service->type_data['defaultCharset'] ?? '') ?: $this->defaultCharset($handler);
+            $collation = (string) ($service->type_data['charsets'][$charset]['default'] ?? '') ?: $this->defaultCollation($handler);
+
+            app(CreateDatabase::class)->create($server, [
+                'name' => $name,
+                'charset' => $charset,
+                'collation' => $collation,
+            ]);
+        }
+
+        if (! $databaseUser) {
+            $databaseUser = app(CreateDatabaseUser::class)->create($server, [
+                'username' => $name,
+                'password' => Str::random(32),
+                'permission' => DatabaseUserPermission::ADMIN->value,
+            ], [$name]);
+        } elseif (! in_array($name, $databaseUser->databases ?? [], true)) {
+            app(LinkUser::class)->link($databaseUser, [
+                'databases' => array_values(array_unique([...($databaseUser->databases ?? []), $name])),
+            ]);
+        }
 
         return [
             'DB_CONNECTION' => $handler instanceof Postgresql ? 'pgsql' : ($handler instanceof Mariadb ? 'mariadb' : 'mysql'),
@@ -121,7 +140,7 @@ class SetUpLaravelApp
             'DB_PORT' => $handler instanceof Postgresql ? '5432' : '3306',
             'DB_DATABASE' => $name,
             'DB_USERNAME' => $name,
-            'DB_PASSWORD' => $password,
+            'DB_PASSWORD' => (string) $databaseUser->password,
         ];
     }
 
@@ -137,7 +156,7 @@ class SetUpLaravelApp
 
     /**
      * Patches the live .env in place so comments and unrelated values survive,
-     * and adds an app key when the file has none.
+     * and adds an app key to a production .env that has none.
      *
      * @param  array<string, string>  $values
      *
@@ -148,7 +167,7 @@ class SetUpLaravelApp
         $path = $site->resolveEnvPath();
         $content = $site->server->os()->readFile($path);
 
-        if (! preg_match('/^APP_KEY=\S+/m', $content)) {
+        if (($site->type_data['production_env'] ?? false) && ! preg_match('/^APP_KEY=["\']?[^\s"\']+/m', $content)) {
             $values['APP_KEY'] = 'base64:'.base64_encode(random_bytes(32));
         }
 
@@ -157,7 +176,7 @@ class SetUpLaravelApp
             $pattern = '/^'.preg_quote($key, '/').'=.*$/m';
 
             $content = preg_match($pattern, $content)
-                ? (string) preg_replace($pattern, str_replace(['\\', '$'], ['\\\\', '\\$'], $line), $content)
+                ? (string) preg_replace_callback($pattern, fn (): string => $line, $content)
                 : rtrim($content)."\n".$line;
         }
 
@@ -193,9 +212,11 @@ class SetUpLaravelApp
     {
         $command = 'cd '.self::appPath($site).' && php artisan schedule:run >> /dev/null 2>&1';
 
-        if ($site->cronJobs()->where('command', $command)->exists()) {
+        $existing = $site->cronJobs()->where('command', $command)->first();
+        if ($existing?->status === CronjobStatus::READY) {
             return;
         }
+        $existing?->delete();
 
         app(CreateCronJob::class)->create($site->server, [
             'name' => 'Laravel scheduler',

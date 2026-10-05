@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Site\SetUpLaravelApp;
+use App\Enums\CronjobStatus;
 use App\Enums\SiteStatus;
 use App\Facades\SSH;
 use App\Models\Database;
@@ -153,3 +154,51 @@ test('app directory is derived from the web directory', function (string $webDir
     ['apps/api/public', 'apps/api'],
     ['dist', ''],
 ]);
+
+test('a retried setup reuses the existing database user password', function () {
+    $ssh = SSH::fake("APP_KEY=base64:existing\nDB_PASSWORD=");
+    $this->actingAs($this->user);
+
+    $this->post(route('sites.store', ['server' => $this->server]), vitoPestFeatureLaravelSetupTestInput([
+        'setup_database' => false,
+        'setup_queue_worker' => false,
+        'setup_scheduler' => false,
+    ]))->assertSessionDoesntHaveErrors();
+
+    $site = Site::query()->where('domain', 'plaka.example.com')->firstOrFail();
+    Database::factory()->create(['server_id' => $this->server->id, 'name' => 'plaka']);
+    DatabaseUser::factory()->create([
+        'server_id' => $this->server->id,
+        'username' => 'plaka',
+        'password' => 'stored-password',
+        'databases' => ['plaka'],
+    ]);
+    $site->jsonUpdate('type_data', 'setup_database', true);
+
+    app(SetUpLaravelApp::class)->setUp($site->refresh());
+
+    expect(DatabaseUser::query()->where('username', 'plaka')->count())->toBe(1);
+    expect($ssh->getUploadedContent())
+        ->toContain('DB_PASSWORD=stored-password')
+        ->toContain('APP_KEY=base64:existing');
+});
+
+test('a retried setup replaces a scheduler that never reached the crontab', function () {
+    SSH::fake();
+    $this->actingAs($this->user);
+
+    $this->post(route('sites.store', ['server' => $this->server]), vitoPestFeatureLaravelSetupTestInput([
+        'production_env' => false,
+        'setup_database' => false,
+        'setup_queue_worker' => false,
+    ]))->assertSessionDoesntHaveErrors();
+
+    $site = Site::query()->where('domain', 'plaka.example.com')->firstOrFail();
+    $cronJob = $site->cronJobs()->firstOrFail();
+    $cronJob->update(['status' => CronjobStatus::CREATING]);
+
+    app(SetUpLaravelApp::class)->setUp($site->refresh());
+
+    expect($site->cronJobs()->count())->toBe(1);
+    expect($site->cronJobs()->first()->status)->toBe(CronjobStatus::READY);
+});
