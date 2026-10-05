@@ -158,7 +158,7 @@ class SiteTypeServiceProvider extends ServiceProvider
                 DynamicField::make('setup_database')
                     ->checkbox()
                     ->label('Create a database and user')
-                    ->description('Named after the site user, owned by that user, and written to .env.')
+                    ->description('Named after the site user and written to .env. Deleting the site keeps the database.')
                     ->default(true),
                 DynamicField::make('setup_queue_worker')
                     ->checkbox()

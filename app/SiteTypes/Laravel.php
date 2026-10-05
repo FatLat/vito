@@ -152,7 +152,11 @@ class Laravel extends PHPSite
             return;
         }
 
-        $name = SetUpLaravelApp::databaseName(new Site(['user' => (string) ($input['user'] ?? '')]));
+        if (! is_string($input['user'] ?? null) || $input['user'] === '') {
+            return;
+        }
+
+        $name = SetUpLaravelApp::databaseName(new Site(['user' => $input['user']]));
 
         $taken = Database::query()->where('server_id', $server->id)->where('name', $name)->exists()
             || DatabaseUser::query()->where('server_id', $server->id)->where('username', $name)->exists();
