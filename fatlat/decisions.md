@@ -1,0 +1,13 @@
+# Kararlar
+
+| No | Karar | Gerekçe |
+|---|---|---|
+| V-01 | Resmi Vito 4.x'in fork'u; fatihalp/vito temel alınmaz | fatihalp fork'u resmi testlerin neredeyse tamamını silmiş, kullanılan özellikleri (terminal, şifre sıfırlama, kullanıcı seçimi) kaldırmış; değişiklikleri yorum/izin değişiklikleriyle iç içe |
+| V-02 | Seçilen özellikler yeniden yazılır, her biri ayrı commit ve testli | Resmi Vito'dan gelen güncellemeler sorunsuz birleşsin |
+| V-03 | Kod stili resmi Vito'nunki (docblock'lar dahil) | plaka-takip'in "yorum yok" kuralı burada uygulanmaz; uygulanırsa her senkronda çakışma çıkar |
+| V-04 | İmaj GitHub Actions'ta derlenir, `ghcr.io/fatlat/vito`'ya **gizli** paket olarak yüklenir | Geliştirme ortamında Packagist/npm erişimi yok; imaj herkese açık yayımlanmaz |
+| V-05 | `public/build` repoda güncellenmez; imaj derlenirken yeniden üretilir | Derleme çıktısı commit'leri gürültü ve senkron çakışması üretir |
+| V-06 | Yalnızca `linux/amd64` | Vito tek bir x64 Windows bilgisayarda çalışıyor |
+| V-07 | Arayüz dili İngilizce | Türkçe çeviri seçilmedi |
+| V-08 | Komut geçmişi yalnızca admin'e; davet araması yalnızca tam e-posta eşleşmesi | fatihalp fork'unda salt okuma yetkisiyle tüm `.bash_history` dosyaları okunabiliyor ve tüm kullanıcılar listelenebiliyordu |
+| V-09 | Vito konteyneri `127.0.0.1:8090`'a bağlanır | Yerel ağa açık olmasına gerek yok |
