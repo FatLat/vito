@@ -1,4 +1,5 @@
 import DateTime from '@/components/date-time';
+import AnsiText from '@/components/ansi-text';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -41,7 +42,11 @@ function InstantLogContent({ serverId, logId }: { serverId: number; logId: numbe
     }, []),
   );
 
-  return <div className="bg-muted/50 max-h-64 overflow-auto border-b px-4 py-2 font-mono text-xs whitespace-pre-wrap">{content}</div>;
+  return (
+    <div className="bg-muted/50 max-h-64 overflow-auto border-b px-4 py-2 font-mono text-xs whitespace-pre-wrap">
+      <AnsiText text={content} />
+    </div>
+  );
 }
 
 export function InstantLogs({ server, children }: { server: Server; children: ReactNode }) {

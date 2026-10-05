@@ -4,6 +4,7 @@ import LogOutput from '@/components/log-output';
 import AnsiText from '@/components/ansi-text';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import { useMemo } from 'react';
 
 type WorkerLogsDialogProps = {
   open: boolean;
@@ -23,6 +24,8 @@ export default function WorkerLogsDialog({ open, onOpenChange, serverId, workerI
     enabled: open,
   });
 
+  const output = useMemo(() => (query.isLoading ? 'Loading...' : <AnsiText text={query.data ?? ''} />), [query.isLoading, query.data]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-5xl" onCloseAutoFocus={(e) => e.preventDefault()}>
@@ -30,7 +33,7 @@ export default function WorkerLogsDialog({ open, onOpenChange, serverId, workerI
           <DialogTitle>Worker logs</DialogTitle>
           <DialogDescription className="sr-only">View worker logs</DialogDescription>
         </DialogHeader>
-        <LogOutput>{query.isLoading ? 'Loading...' : <AnsiText text={query.data ?? ''} />}</LogOutput>
+        <LogOutput>{output}</LogOutput>
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline">Close</Button>

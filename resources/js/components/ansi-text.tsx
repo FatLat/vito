@@ -37,8 +37,11 @@ function applyCodes(style: AnsiStyle, params: string): AnsiStyle {
   const codes = params === '' ? [0] : params.split(';').map((code) => Number(code));
   let next = { ...style };
 
-  for (const code of codes) {
-    if (code === 0) {
+  for (let i = 0; i < codes.length; i++) {
+    const code = codes[i];
+    if (code === 38 || code === 48) {
+      i += codes[i + 1] === 2 ? 4 : 2;
+    } else if (code === 0) {
       next = {};
     } else if (code === 1) {
       next.bold = true;

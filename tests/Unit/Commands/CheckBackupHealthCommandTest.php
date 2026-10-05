@@ -17,6 +17,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     Notification::fake();
     Carbon::setTestNow('2026-10-05 12:30:00');
+    config(['core.backup_run_timeout' => 3600]);
     $this->channel = NotificationChannel::factory()->create();
 });
 
@@ -35,6 +36,7 @@ function vitoPestUnitCommandsCheckBackupHealthCommandTestCreateBackup(array $att
         'interval' => '0 * * * *',
         'keep_backups' => 10,
         'created_at' => now()->subDay(),
+        'updated_at' => now()->subDay(),
     ], $attributes));
 }
 
@@ -99,10 +101,58 @@ test('a backup that runs again after an alert sends a recovered notice', functio
     expect($backup->refresh()->health_alerted_at)->toBeNull();
 });
 
-test('disabled backups are skipped', function () {
-    $backup = vitoPestUnitCommandsCheckBackupHealthCommandTestCreateBackup();
+test('disabled backups are skipped and their alert flag is cleared', function () {
+    $backup = vitoPestUnitCommandsCheckBackupHealthCommandTestCreateBackup(['health_alerted_at' => now()->subHour()]);
     $backup->enabled = false;
-    $backup->save();
+    $backup->saveQuietly();
+
+    $this->artisan('backups:check-health')->assertSuccessful();
+
+    Notification::assertNothingSent();
+    expect($backup->refresh()->health_alerted_at)->toBeNull();
+});
+
+test('a failed backup that runs again sends a recovered notice', function () {
+    $backup = vitoPestUnitCommandsCheckBackupHealthCommandTestCreateBackup();
+    vitoPestUnitCommandsCheckBackupHealthCommandTestCreateFile($backup, BackupFileStatus::FAILED, now()->subHours(2));
+
+    $this->artisan('backups:check-health')->assertSuccessful();
+    Notification::assertNothingSent();
+
+    vitoPestUnitCommandsCheckBackupHealthCommandTestCreateFile($backup, BackupFileStatus::CREATED, now()->subHour()->startOfHour());
+    $this->artisan('backups:check-health')->assertSuccessful();
+
+    Notification::assertSentToTimes($this->channel, BackupRecovered::class, 1);
+});
+
+test('a backup changed after its last expected run is not overdue', function () {
+    vitoPestUnitCommandsCheckBackupHealthCommandTestCreateBackup(['updated_at' => now()->subMinutes(30)]);
+
+    $this->artisan('backups:check-health')->assertSuccessful();
+
+    Notification::assertNothingSent();
+});
+
+test('a run still in progress counts as having run', function () {
+    $backup = vitoPestUnitCommandsCheckBackupHealthCommandTestCreateBackup();
+    vitoPestUnitCommandsCheckBackupHealthCommandTestCreateFile($backup, BackupFileStatus::CREATING, now()->subHour()->startOfHour());
+
+    $this->artisan('backups:check-health')->assertSuccessful();
+
+    Notification::assertNothingSent();
+});
+
+test('an impossible cron expression does not stop other backups from being checked', function () {
+    vitoPestUnitCommandsCheckBackupHealthCommandTestCreateBackup(['interval' => '0 0 31 2 *']);
+    vitoPestUnitCommandsCheckBackupHealthCommandTestCreateBackup();
+
+    $this->artisan('backups:check-health')->assertSuccessful();
+
+    Notification::assertSentToTimes($this->channel, BackupOverdue::class, 1);
+});
+
+test('an alerted backup that is still overdue stays quiet', function () {
+    vitoPestUnitCommandsCheckBackupHealthCommandTestCreateBackup(['health_alerted_at' => now()->subHour()]);
 
     $this->artisan('backups:check-health')->assertSuccessful();
 

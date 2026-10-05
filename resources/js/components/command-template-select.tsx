@@ -18,6 +18,7 @@ export default function CommandTemplateSelect({
     <FormField>
       <Label htmlFor="template">Template</Label>
       <Select
+        value=""
         onValueChange={(value) => {
           const template = templates.find((item) => item.id === value);
           if (template) {
