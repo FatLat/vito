@@ -11,3 +11,5 @@
 | V-07 | Arayüz dili İngilizce | Türkçe çeviri seçilmedi |
 | V-08 | Komut geçmişi yalnızca admin'e; davet araması yalnızca tam e-posta eşleşmesi | fatihalp fork'unda salt okuma yetkisiyle tüm `.bash_history` dosyaları okunabiliyor ve tüm kullanıcılar listelenebiliyordu |
 | V-09 | Vito konteyneri `127.0.0.1:8090`'a bağlanır | Yerel ağa açık olmasına gerek yok |
+| V-10 | Sunucu geneli limitler sayfası (16) yapılmaz | Resmi Vito 4.1'de site → Settings → PHP settings aynı ayarları (yükleme, süre, bellek, input vars ve Nginx `client_max_body_size`) site bazında yapıyor |
+| V-11 | Yedek sağlığında yalnızca gecikme ve düzelme bildirilir | Başarısız yedek için resmi Vito zaten bildirim gönderiyor; Vito bilgisayarda çalıştığı için kaçırılan zamanlanmış yedekler asıl risk |

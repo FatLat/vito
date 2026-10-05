@@ -7,19 +7,19 @@ Sahip: **L** Latif · **C** Claude. Durum: ☐ bekliyor · ◐ sürüyor · ☑ 
 |---|---|---|---|
 | V-001 | FatLat/vito fork'u | L | ☑ |
 | V-002 | Plan dokümanları (`fatlat/`) | C | ☑ |
-| V-003 | `fatlat-image` workflow'u: testler geçince imajı derleyip gizli GHCR paketine yükle | C | ◐ |
-| V-004 | Fork'ta GitHub Actions'ı aç; FatLat paket ayarında yalnızca gizli paket | L | ☐ |
-| V-005 | `read:packages` token'ı ile `docker login ghcr.io` | L | ☐ |
-| V-006 | `update-vito.ps1` ile bilgisayardaki Vito'yu yeni imaja geçir | L + C | ☐ |
+| V-003 | `fatlat-image` workflow'u: testler geçince imajı derleyip gizli GHCR paketine yükle | C | ☑ |
+| V-004 | Fork'ta GitHub Actions'ı aç; FatLat paket ayarında yalnızca gizli paket | L | ☑ |
+| V-005 | `read:packages` token'ı ile `docker login ghcr.io` | L | ☑ |
+| V-006 | `update-vito.ps1` ile bilgisayardaki Vito'yu yeni imaja geçir | L + C | ☑ |
 
 ## F1 — Hızlı kazanımlar
 | No | Görev | Sahip | Durum |
 |---|---|---|---|
-| V-101 | Renkli (ANSI) log çıktısı | C | ☐ |
-| V-102 | Cron ve worker hazır şablonları (Laravel) | C | ☐ |
-| V-103 | PHP/Nginx limitleri sayfası | C | ☐ |
-| V-104 | Rol/izin tablosu | C | ☐ |
-| V-105 | Yedek sağlık uyarıları (gecikti/başarısız/düzeldi) | C | ☐ |
+| V-101 | Renkli (ANSI) log çıktısı | C | ☑ |
+| V-102 | Cron ve worker hazır şablonları (Laravel); yeni worker'da numprocs varsayılanı 1 | C | ☑ |
+| V-103 | PHP/Nginx limitleri sayfası — resmi Vito'da site ayarlarında zaten var (V-10), yapılmadı | C | – |
+| V-104 | Rol/izin tablosu (proje davet penceresinde) | C | ☑ |
+| V-105 | Yedek sağlık uyarıları: gecikme ve düzelme bildirimi (`backups:check-health`, 15 dk) | C | ☑ |
 
 ## F2 — Deploy ve .env
 | No | Görev | Sahip | Durum |
