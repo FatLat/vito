@@ -150,6 +150,24 @@ class SiteTypeServiceProvider extends ServiceProvider
                     )
                     ->label('Package Manager')
                     ->description('JavaScript package manager used to build front-end assets during deployment.'),
+                DynamicField::make('production_env')
+                    ->checkbox()
+                    ->label('Prepare .env for production')
+                    ->description('Sets APP_ENV, APP_DEBUG, APP_URL and an APP_KEY. For apps in a subdirectory (web directory like app/public), the .env inside that directory is used.')
+                    ->default(true),
+                DynamicField::make('setup_database')
+                    ->checkbox()
+                    ->label('Create a database and user')
+                    ->description('Named after the site user, owned by that user, and written to .env.')
+                    ->default(true),
+                DynamicField::make('setup_queue_worker')
+                    ->checkbox()
+                    ->label('Create a queue worker')
+                    ->default(true),
+                DynamicField::make('setup_scheduler')
+                    ->checkbox()
+                    ->label('Create the scheduler cron job')
+                    ->default(true),
             ]))
             ->register();
         RegisterSiteFeature::make(Laravel::id(), 'modern-deployment')

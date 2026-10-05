@@ -160,9 +160,14 @@ class PHPSite extends AbstractSiteType
         $this->site->php()?->restart();
         $this->progress(75, 'installing-composer-dependencies');
         if ($this->site->type_data['composer']) {
-            app(Composer::class)->installDependencies($this->site);
+            app(Composer::class)->installDependencies($this->site, $this->composerPath());
         }
         $this->progress(90, 'finishing');
+    }
+
+    protected function composerPath(): string
+    {
+        return $this->site->path;
     }
 
     public function baseCommands(): array

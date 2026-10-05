@@ -31,7 +31,7 @@ Sahip: **L** Latif · **C** Claude. Durum: ☐ bekliyor · ◐ sürüyor · ☑ 
 ## F3 — Tek tıkla Laravel
 | No | Görev | Sahip | Durum |
 |---|---|---|---|
-| V-301 | "Laravel (hazır kurulum)" site türü | C | ☐ |
+| V-301 | Laravel site türüne kurulum seçenekleri: üretim `.env` (APP_KEY dahil), veritabanı + sahibi kullanıcı, kuyruk işçisi, scheduler; alt klasördeki uygulamalar (`panel/public`) için `.env`, Composer ve deploy betiği o klasörde | C | ☑ |
 
 ## F4 — Sunucu sayfaları
 | No | Görev | Sahip | Durum |
