@@ -88,7 +88,7 @@ class ApplicationController extends Controller
     {
         $this->authorize('update', [$site, $server]);
 
-        app(Deploy::class)->run($site);
+        app(Deploy::class)->run($site, user: user());
 
         return back()->with('info', 'Deployment started, please wait...');
     }
@@ -102,7 +102,7 @@ class ApplicationController extends Controller
             return back()->with('error', 'Invalid deployment selected for rollback.');
         }
 
-        app(Rollback::class)->run($deployment);
+        app(Rollback::class)->run($deployment, user());
 
         return back()->with('info', 'Rollback started, please wait...');
     }

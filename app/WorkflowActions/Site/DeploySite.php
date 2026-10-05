@@ -3,6 +3,7 @@
 namespace App\WorkflowActions\Site;
 
 use App\Actions\Site\Deploy;
+use App\Enums\DeploymentTrigger;
 use App\Models\Site;
 use App\WorkflowActions\AbstractWorkflowAction;
 use Illuminate\Support\Facades\Validator;
@@ -36,7 +37,7 @@ class DeploySite extends AbstractWorkflowAction
 
         $this->authorize('update', [$site, $site->server]);
 
-        $deployment = app(Deploy::class)->run($site);
+        $deployment = app(Deploy::class)->run($site, user: $this->user, trigger: DeploymentTrigger::WORKFLOW);
 
         return [
             'site_id' => $site->id,

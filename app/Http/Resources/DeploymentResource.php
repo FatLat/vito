@@ -27,6 +27,11 @@ class DeploymentResource extends JsonResource
             'status_color' => $this->status->getColor(),
             'release' => $this->release,
             'active' => $this->active,
+            'trigger' => $this->trigger?->getText(),
+            'trigger_color' => $this->trigger?->getColor(),
+            'deployed_by' => $this->user?->name,
+            'rolled_back_by' => $this->rolledBackBy?->name,
+            'rolled_back_at' => $this->rolled_back_at,
             'updated_at' => $this->updated_at,
             'created_at' => $this->created_at,
         ];

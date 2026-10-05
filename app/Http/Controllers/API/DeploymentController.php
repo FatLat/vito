@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Actions\Site\Deploy;
+use App\Enums\DeploymentTrigger;
 use App\Exceptions\DeploymentScriptIsEmptyException;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DeploymentResource;
@@ -28,7 +29,7 @@ class DeploymentController extends Controller
         $this->validateRoute($project, $server, $site);
 
         $deployments = $site->deployments()
-            ->with(['log'])
+            ->with(['log', 'user', 'rolledBackBy'])
             ->latest()
             ->simplePaginate(25);
 
@@ -43,7 +44,7 @@ class DeploymentController extends Controller
         $this->validateRoute($project, $server, $site);
 
         try {
-            $deployment = app(Deploy::class)->run($site);
+            $deployment = app(Deploy::class)->run($site, user: user(), trigger: DeploymentTrigger::API);
 
             return new DeploymentResource($deployment);
         } catch (DeploymentScriptIsEmptyException) {
