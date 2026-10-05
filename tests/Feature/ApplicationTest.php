@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Site\RecordEnvVersion;
 use App\Actions\Site\UpdateEnv;
 use App\Enums\DeploymentStatus;
 use App\Enums\DeploymentTrigger;
@@ -8,6 +9,7 @@ use App\Enums\WorkerStatus;
 use App\Events\SocketEvent;
 use App\Facades\SSH;
 use App\Models\Deployment;
+use App\Models\EnvVersion;
 use App\Models\GitHook;
 use App\Models\Site;
 use App\Models\Worker;
@@ -1556,3 +1558,105 @@ function vitoPestFeatureApplicationTestMakeUserReadOnly(): void
         'role' => UserRole::USER,
     ]);
 }
+
+test('updating env keeps the previous content as a version', function () {
+    SSH::fake('APP_ENV=staging');
+
+    $this->actingAs($this->user);
+
+    $this->put(route('application.update-env', [
+        'server' => $this->server,
+        'site' => $this->site,
+    ]), [
+        'env' => 'APP_ENV=production',
+    ])->assertSessionDoesntHaveErrors();
+
+    $version = EnvVersion::query()->where('site_id', $this->site->id)->sole();
+    expect($version->content)->toBe('APP_ENV=staging');
+    expect($version->path)->toBe($this->site->path.'/.env');
+    expect($version->user_id)->toBe($this->user->id);
+});
+
+test('updating env with unchanged content does not add a version', function () {
+    SSH::fake('APP_ENV=production');
+
+    $this->actingAs($this->user);
+
+    $this->put(route('application.update-env', [
+        'server' => $this->server,
+        'site' => $this->site,
+    ]), [
+        'env' => 'APP_ENV=production',
+    ])->assertSessionDoesntHaveErrors();
+
+    expect(EnvVersion::query()->count())->toBe(0);
+});
+
+test('env versions are pruned to the newest ones per path', function () {
+    $path = $this->site->path.'/.env';
+    EnvVersion::factory()->count(EnvVersion::KEEP)->create(['site_id' => $this->site->id, 'path' => $path]);
+    $oldestId = EnvVersion::query()->min('id');
+
+    app(RecordEnvVersion::class)->record($this->site, $path, 'APP_ENV=newest', null);
+
+    expect(EnvVersion::query()->where('path', $path)->count())->toBe(EnvVersion::KEEP);
+    expect(EnvVersion::query()->whereKey($oldestId)->exists())->toBeFalse();
+});
+
+test('env versions list does not include content', function () {
+    EnvVersion::factory()->create(['site_id' => $this->site->id, 'user_id' => $this->user->id]);
+
+    $this->actingAs($this->user);
+
+    $this->get(route('application.env-versions', [
+        'server' => $this->server,
+        'site' => $this->site,
+    ]))
+        ->assertSuccessful()
+        ->assertJsonPath('0.user', $this->user->name)
+        ->assertJsonMissingPath('0.content');
+});
+
+test('read only member cannot list env versions', function () {
+    vitoPestFeatureApplicationTestMakeUserReadOnly();
+
+    $this->actingAs($this->user);
+
+    $this->get(route('application.env-versions', [
+        'server' => $this->server,
+        'site' => $this->site,
+    ]))->assertForbidden();
+});
+
+test('restoring an env version writes it back and keeps the replaced content', function () {
+    $ssh = SSH::fake('APP_ENV=broken');
+    $version = EnvVersion::factory()->create([
+        'site_id' => $this->site->id,
+        'path' => $this->site->path.'/.env',
+        'content' => 'APP_ENV=production',
+    ]);
+
+    $this->actingAs($this->user);
+
+    $this->post(route('application.restore-env-version', [
+        'server' => $this->server,
+        'site' => $this->site,
+        'envVersion' => $version,
+    ]))->assertSessionDoesntHaveErrors();
+
+    expect($ssh->getUploadedContent())->toBe('APP_ENV=production');
+    expect(EnvVersion::query()->get()->pluck('content')->all())->toContain('APP_ENV=broken');
+});
+
+test('an env version of another site cannot be restored', function () {
+    $otherSite = Site::factory()->create(['server_id' => $this->server->id]);
+    $version = EnvVersion::factory()->create(['site_id' => $otherSite->id]);
+
+    $this->actingAs($this->user);
+
+    $this->post(route('application.restore-env-version', [
+        'server' => $this->server,
+        'site' => $this->site,
+        'envVersion' => $version,
+    ]))->assertNotFound();
+});

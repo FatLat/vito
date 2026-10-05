@@ -16,10 +16,12 @@ use App\Exceptions\ReverseProxyNotConfiguredException;
 use App\Exceptions\SourceControlIsNotConnected;
 use App\Exceptions\SSHError;
 use App\Http\Resources\DeploymentScriptResource;
+use App\Http\Resources\EnvVersionResource;
 use App\Http\Resources\LoadBalancerServerResource;
 use App\Http\Resources\WorkerResource;
 use App\Models\Deployment;
 use App\Models\DeploymentScript;
+use App\Models\EnvVersion;
 use App\Models\Server;
 use App\Models\Site;
 use App\SiteTypes\AbstractProxiedSiteType;
@@ -173,9 +175,39 @@ class ApplicationController extends Controller
     {
         $this->authorize('update', [$site, $server]);
 
-        app(UpdateEnv::class)->update($site, $request->input());
+        app(UpdateEnv::class)->update($site, $request->input(), user());
 
         return back()->with('success', '.env file updated successfully.');
+    }
+
+    #[Get('/env/versions', name: 'application.env-versions')]
+    public function envVersions(Server $server, Site $site): JsonResponse
+    {
+        $this->authorize('revealEnv', [$site, $server]);
+
+        return response()->json(
+            EnvVersionResource::collection($site->envVersions()->with('user')->latest('id')->get())
+        );
+    }
+
+    /**
+     * @throws SSHError
+     * @throws ValidationException
+     */
+    #[Post('/env/versions/{envVersion}/restore', name: 'application.restore-env-version')]
+    public function restoreEnvVersion(Server $server, Site $site, EnvVersion $envVersion): RedirectResponse
+    {
+        $this->authorize('update', [$site, $server]);
+        $this->authorize('revealEnv', [$site, $server]);
+
+        abort_unless($envVersion->site_id === $site->id, 404);
+
+        app(UpdateEnv::class)->update($site, [
+            'env' => $envVersion->content,
+            'path' => $envVersion->path,
+        ], user());
+
+        return back()->with('success', '.env file restored.');
     }
 
     /**

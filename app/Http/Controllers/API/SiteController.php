@@ -172,7 +172,7 @@ class SiteController extends Controller
 
         $this->validateRoute($project, $server, $site);
 
-        app(UpdateEnv::class)->update($site, $request->all());
+        app(UpdateEnv::class)->update($site, $request->all(), user());
 
         return new SiteResource($site);
     }

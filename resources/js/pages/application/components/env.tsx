@@ -9,7 +9,7 @@ import { Form } from '@/components/ui/form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { LoaderCircleIcon, PlusIcon, RefreshCwIcon, UploadIcon, AlertCircleIcon, ClipboardIcon, InfoIcon } from 'lucide-react';
+import { LoaderCircleIcon, PlusIcon, RefreshCwIcon, UploadIcon, AlertCircleIcon, ClipboardIcon, InfoIcon, HistoryIcon, TriangleAlertIcon } from 'lucide-react';
 import { Site } from '@/types/site';
 import { Input } from '@/components/ui/input';
 import { useInputFocus } from '@/stores/useInputFocus';
@@ -17,10 +17,20 @@ import { useAppearance } from '@/hooks/use-appearance';
 import { registerDotEnvLanguage } from '@/lib/editor';
 import { EnvVariable } from '@/types/env';
 import EnvVariableRow from './env-variable-row';
+import EnvHistory from './env-history';
 import { generateUniqueKey } from '@/lib/env';
 import { cn, rowId } from '@/lib/utils';
 
 type ParsedVariable = { key: string; value: string; is_secret: boolean };
+
+const envValue = (pairs: Array<{ key: string; value: string }>, key: string): string =>
+  (pairs.find((pair) => pair.key.trim() === key)?.value ?? '').trim().replace(/^["']|["']$/g, '').toLowerCase();
+
+const rawPairs = (content: string): Array<{ key: string; value: string }> =>
+  content.split(/\r?\n/).flatMap((line) => {
+    const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=(.*)$/);
+    return match ? [{ key: match[1], value: match[2] }] : [];
+  });
 
 const defaultEnvPath = (site: Site): string => site.type_data.env_path || `${site.path}/.env`;
 
@@ -58,6 +68,7 @@ export default function Env({ site, children }: { site: Site; children: ReactNod
   const [isUploading, setIsUploading] = useState(false);
   const [isPasting, setIsPasting] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -103,6 +114,7 @@ export default function Env({ site, children }: { site: Site; children: ReactNod
       setRawContent('');
       setVariablesDirty(false);
       setUploadError(null);
+      setShowHistory(false);
     }
   };
 
@@ -323,6 +335,10 @@ export default function Env({ site, children }: { site: Site; children: ReactNod
   };
 
   const busy = query.isFetching || isUploading || isPasting || isSwitching;
+  const debugInProduction = useMemo(() => {
+    const pairs = mode === 'classic' ? rawPairs(rawContent) : variables;
+    return envValue(pairs, 'APP_DEBUG') === 'true' && envValue(pairs, 'APP_ENV') === 'production';
+  }, [mode, rawContent, variables]);
   const pathUncommitted = form.data.path !== committedPath;
 
   return (
@@ -367,9 +383,37 @@ export default function Env({ site, children }: { site: Site; children: ReactNod
               </TooltipTrigger>
               <TooltipContent>Paste from clipboard</TooltipContent>
             </Tooltip>
+            {canEdit === true && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant={showHistory ? 'secondary' : 'outline'}
+                    size="icon"
+                    onClick={() => setShowHistory((value) => !value)}
+                    disabled={pathUncommitted}
+                    aria-pressed={showHistory}
+                  >
+                    <HistoryIcon />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>History</TooltipContent>
+              </Tooltip>
+            )}
             <input ref={fileInputRef} type="file" accept="*" onChange={handleFileUpload} className="hidden" />
           </div>
           <div className={cn('flex min-h-0 flex-1 flex-col gap-4', mode === 'classic' ? 'overflow-hidden' : 'overflow-y-auto')}>
+            {showHistory && canEdit === true && !pathUncommitted && (
+              <div className="shrink-0">
+                <EnvHistory site={site} path={committedPath} onRestored={() => query.refetch()} />
+              </div>
+            )}
+            {debugInProduction && (
+              <Alert className="shrink-0">
+                <TriangleAlertIcon className="size-4" />
+                <AlertDescription>APP_DEBUG is true while APP_ENV is production. Error pages will show stack traces and configuration to visitors.</AlertDescription>
+              </Alert>
+            )}
             {uploadError && (
               <Alert variant="destructive" className="shrink-0">
                 <AlertCircleIcon className="size-4" />
