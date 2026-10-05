@@ -14,7 +14,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('backups:run')->everyMinute();
         $schedule->command('backups:reconcile')->everyThirtyMinutes();
-        $schedule->command('backups:check-health')->everyFifteenMinutes();
+        $schedule->command('backups:check-health')->everyFifteenMinutes()->withoutOverlapping();
         $schedule->command('metrics:delete-older-metrics')->daily();
         $schedule->command('db:vacuum')->daily();
         $schedule->command('metrics:get')->everyMinute()->withoutOverlapping(5);
