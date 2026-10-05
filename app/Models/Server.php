@@ -14,6 +14,7 @@ use App\ServerFeatures\ActionInterface;
 use App\SSH\OS\Cron;
 use App\SSH\OS\OS;
 use App\SSH\OS\Security;
+use App\SSH\OS\System;
 use App\SSH\OS\Systemd;
 use App\Support\Testing\SSHFake;
 use Carbon\Carbon;
@@ -597,6 +598,11 @@ class Server extends AbstractModel
     public function os(): OS
     {
         return new OS($this);
+    }
+
+    public function system(): System
+    {
+        return new System($this);
     }
 
     public function systemd(): Systemd

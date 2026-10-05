@@ -36,10 +36,10 @@ Sahip: **L** Latif · **C** Claude. Durum: ☐ bekliyor · ◐ sürüyor · ☑ 
 ## F4 — Sunucu sayfaları
 | No | Görev | Sahip | Durum |
 |---|---|---|---|
-| V-401 | İzleme: süreçler, disk, sunucu bilgisi, log boyutları | C | ☐ |
-| V-402 | Yeniden başlatma ve güncelleme sayfaları | C | ☐ |
-| V-403 | Güvenlik puanı ve sertleştirme kartları | C | ☐ |
-| V-404 | Komut geçmişi (yalnızca admin) | C | ☐ |
+| V-401 | Sistem menüsü: genel bakış (sunucu bilgisi, diskler, en büyük klasörler ve log dosyaları, log temizleme) ve süreçler (10 sn'de yenilenir, SIGTERM/SIGKILL) | C | ☑ |
+| V-402 | Güncellemeler sayfası: bekleyen paketler (çekirdek işaretli), yeniden başlatma gerekiyor uyarısı, güncelle/çekirdek/yeniden başlat düğmeleri, canlı izlenen son loglar | C | ☑ |
+| V-403 | Güvenlik puanı ve sertleştirme kartları — resmi Vito'da Security sayfasında zaten var (V-18), yapılmadı | C | – |
+| V-404 | Komut geçmişi: sudo günlüğü ve kullanıcıların shell geçmişi (yalnızca admin/owner) | C | ☑ |
 
 ## F5 — Gezinme ve tablolar
 | No | Görev | Sahip | Durum |

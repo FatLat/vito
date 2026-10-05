@@ -19,3 +19,6 @@
 | V-15 | Tek tıkla kurulum ayrı site türü değil, Laravel türüne seçenek olarak eklendi (varsayılan açık) | Ayrı tür, Laravel'e bağlı özellikleri (Modern Deployment, hazır deploy betiği, artisan komutları) kaybederdi |
 | V-16 | Veritabanı ve kullanıcı adı site kullanıcısından türetilir, şifre rastgele 32 karakter; kullanıcı Vito'nun "veritabanıyla birlikte oluştur" yoluyla admin yetkisiyle bağlanır | Ayrı oluşturup bağlamamak 2026-10-04'teki "permission denied for schema public" hatasının sebebiydi |
 | V-17 | Uygulama klasörü web dizininden türetilir (`panel/public` → `panel`) | Ek form alanı gerekmez |
+| V-18 | Güvenlik puanı (18) yapılmaz | Resmi Vito 4.1 Security sayfasında puan, parola girişi, root girişi, Fail2ban, güvenlik duvarı ve otomatik güncelleme kartları var |
+| V-19 | Süreçler, komut geçmişi, süreç sonlandırma ve log temizleme yalnızca admin/owner (`manage`); genel bakış ve güncellemeler her proje üyesine açık | Süreç komut satırları ve shell geçmişi parola içerebilir |
+| V-20 | Log temizleme yalnızca `/var/log` altındaki yollar için, `..` ve kabuk karakterleri reddedilir | Yol SSH komutuna giriyor |
