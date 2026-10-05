@@ -24,9 +24,9 @@ Sahip: **L** Latif · **C** Claude. Durum: ☐ bekliyor · ◐ sürüyor · ☑ 
 ## F2 — Deploy ve .env
 | No | Görev | Sahip | Durum |
 |---|---|---|---|
-| V-201 | Deploy geçmişi: kim deploy etti / geri aldı, detay sayfası, log indirme | C | ☐ |
-| V-202 | `.env` sürüm geçmişi, geri alma, boş `.env` koruması, `APP_DEBUG` uyarısı | C | ☐ |
-| V-203 | Site kurulum ilerlemesi: adımlar, yeniden dene, iptal | C | ☐ |
+| V-201 | Deploy geçmişi: kim deploy etti / geri aldı, tetikleyici (elle/API/webhook/workflow); log görüntüleme ve indirme zaten vardı | C | ☑ |
+| V-202 | `.env` sürüm geçmişi (son 20, şifreli), geri alma, `APP_DEBUG` uyarısı; boş `.env` engellenmedi (V-12) | C | ☑ |
+| V-203 | Site kurulum ilerlemesi — resmi Vito'da zaten var (V-13), yapılmadı | C | – |
 
 ## F3 — Tek tıkla Laravel
 | No | Görev | Sahip | Durum |

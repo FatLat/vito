@@ -5,6 +5,7 @@ namespace App\Actions\Site;
 use App\Exceptions\SSHError;
 use App\Helpers\EnvParser;
 use App\Models\Site;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -16,7 +17,7 @@ class UpdateEnv
      * @throws SSHError
      * @throws ValidationException
      */
-    public function update(Site $site, array $input): void
+    public function update(Site $site, array $input, ?User $user = null): void
     {
         Validator::make($input, [
             'env' => ['nullable', 'string'],
@@ -49,12 +50,14 @@ class UpdateEnv
         $path = $site->resolveEnvPath($input['path'] ?? null);
 
         $variables = $this->resolveVariables($site, $input, $path, $hasVariables);
+        $content = $hasVariables ? EnvParser::stringify($variables) : trim((string) ($input['env'] ?? null));
+        $previousContent = $site->getEnv($path);
 
-        $site->server->os()->write(
-            $path,
-            $hasVariables ? EnvParser::stringify($variables) : trim((string) ($input['env'] ?? null)),
-            $site->user,
-        );
+        $site->server->os()->write($path, $content, $site->user);
+
+        if (trim($previousContent) !== trim($content)) {
+            app(RecordEnvVersion::class)->record($site, $path, $previousContent, $user);
+        }
 
         $site->env_variables = $this->secretKeys($variables);
         $site->jsonUpdate('type_data', 'env_path', $path, save: false);

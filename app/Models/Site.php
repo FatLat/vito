@@ -306,6 +306,14 @@ class Site extends AbstractModel
     }
 
     /**
+     * @return HasMany<EnvVersion, covariant $this>
+     */
+    public function envVersions(): HasMany
+    {
+        return $this->hasMany(EnvVersion::class);
+    }
+
+    /**
      * @return HasMany<Deployment, covariant $this>
      */
     public function deployments(): HasMany

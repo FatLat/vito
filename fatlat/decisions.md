@@ -13,3 +13,6 @@
 | V-09 | Vito konteyneri `127.0.0.1:8090`'a bağlanır | Yerel ağa açık olmasına gerek yok |
 | V-10 | Sunucu geneli limitler sayfası (16) yapılmaz | Resmi Vito 4.1'de site → Settings → PHP settings aynı ayarları (yükleme, süre, bellek, input vars ve Nginx `client_max_body_size`) site bazında yapıyor |
 | V-11 | Yedek sağlığında yalnızca gecikme ve düzelme bildirilir | Başarısız yedek için resmi Vito zaten bildirim gönderiyor; Vito bilgisayarda çalıştığı için kaçırılan zamanlanmış yedekler asıl risk |
+| V-12 | Boş `.env` kaydı engellenmez | Resmi Vito klasik modda boş kaydetmeyi bilerek destekliyor; her kayıttan önce önceki içerik saklandığı için yanlışlıkla boşaltılan dosya geri yüklenebiliyor |
+| V-13 | Site kurulum ilerlemesi (11) yapılmaz | Resmi Vito 4.1 kurulum adımını gösteriyor ve "Retry installation" ile tamamlanan adımları atlayarak devam ediyor |
+| V-14 | `.env` sürümleri veritabanında şifreli (`encrypted` cast) saklanır, yalnızca `.env`'yi görme yetkisi olanlara listelenir, liste içerik döndürmez | Sürümler gizli anahtarlar içeriyor |
