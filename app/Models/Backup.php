@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\BackupStatus;
 use App\Enums\BackupType;
+use Carbon\Carbon;
 use Database\Factories\BackupFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property int $keep_backups
  * @property ?BackupStatus $status
  * @property bool $enabled
+ * @property ?Carbon $health_alerted_at
  * @property Server $server
  * @property StorageProvider $storage
  * @property ?Database $database
@@ -49,6 +51,7 @@ class Backup extends AbstractModel
         'type' => BackupType::class,
         'status' => BackupStatus::class,
         'enabled' => 'boolean',
+        'health_alerted_at' => 'datetime',
     ];
 
     public static function boot(): void
