@@ -16,3 +16,6 @@
 | V-12 | Boş `.env` kaydı engellenmez | Resmi Vito klasik modda boş kaydetmeyi bilerek destekliyor; her kayıttan önce önceki içerik saklandığı için yanlışlıkla boşaltılan dosya geri yüklenebiliyor |
 | V-13 | Site kurulum ilerlemesi (11) yapılmaz | Resmi Vito 4.1 kurulum adımını gösteriyor ve "Retry installation" ile tamamlanan adımları atlayarak devam ediyor |
 | V-14 | `.env` sürümleri veritabanında şifreli (`encrypted` cast) saklanır, yalnızca `.env`'yi görme yetkisi olanlara listelenir, liste içerik döndürmez | Sürümler gizli anahtarlar içeriyor |
+| V-15 | Tek tıkla kurulum ayrı site türü değil, Laravel türüne seçenek olarak eklendi (varsayılan açık) | Ayrı tür, Laravel'e bağlı özellikleri (Modern Deployment, hazır deploy betiği, artisan komutları) kaybederdi |
+| V-16 | Veritabanı ve kullanıcı adı site kullanıcısından türetilir, şifre rastgele 32 karakter; kullanıcı Vito'nun "veritabanıyla birlikte oluştur" yoluyla admin yetkisiyle bağlanır | Ayrı oluşturup bağlamamak 2026-10-04'teki "permission denied for schema public" hatasının sebebiydi |
+| V-17 | Uygulama klasörü web dizininden türetilir (`panel/public` → `panel`) | Ek form alanı gerekmez |
