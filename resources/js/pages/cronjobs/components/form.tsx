@@ -13,6 +13,8 @@ import { SharedData } from '@/types';
 import { Server } from '@/types/server';
 import { Site } from '@/types/site';
 import { useConfigs } from '@/stores/bootstrap-store';
+import CommandTemplateSelect from '@/components/command-template-select';
+import { cronJobTemplates } from '@/lib/command-templates';
 
 export default function CronJobForm({
   open,
@@ -76,6 +78,20 @@ export default function CronJobForm({
         </DialogHeader>
         <Form id="cronjob-form" onSubmit={submit} className="p-4">
           <FormFields>
+            {site && !cronJob && (
+              <CommandTemplateSelect
+                templates={cronJobTemplates(site)}
+                onSelect={(template) =>
+                  form.setData((data) => ({
+                    ...data,
+                    name: template.name,
+                    command: template.command,
+                    frequency: template.frequency ?? data.frequency,
+                  }))
+                }
+              />
+            )}
+
             <FormField>
               <Label htmlFor="name">Name</Label>
               <Input

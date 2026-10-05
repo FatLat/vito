@@ -13,6 +13,8 @@ import { SharedData } from '@/types';
 import { Server } from '@/types/server';
 import { Switch } from '@/components/ui/switch';
 import { Site } from '@/types/site';
+import CommandTemplateSelect from '@/components/command-template-select';
+import { workerTemplates } from '@/lib/command-templates';
 
 export default function WorkerForm({
   open,
@@ -42,7 +44,7 @@ export default function WorkerForm({
     user: worker?.user || '',
     auto_start: worker?.auto_start || true,
     auto_restart: worker?.auto_restart || true,
-    numprocs: worker?.numprocs.toString() || '',
+    numprocs: worker?.numprocs.toString() || '1',
     site_id: worker?.site_id?.toString() || '0',
   });
 
@@ -68,6 +70,20 @@ export default function WorkerForm({
         </DialogHeader>
         <Form id="worker-form" onSubmit={submit} className="p-4">
           <FormFields>
+            {site && !worker && (
+              <CommandTemplateSelect
+                templates={workerTemplates()}
+                onSelect={(template) =>
+                  form.setData((data) => ({
+                    ...data,
+                    name: template.name,
+                    command: template.command,
+                    user: data.user || site.user,
+                  }))
+                }
+              />
+            )}
+
             <FormField>
               <Label htmlFor="name">Name</Label>
               <Input type="text" id="name" value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} />
