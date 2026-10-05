@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Backup\CheckBackupHealth;
 use App\Enums\BackupFileStatus;
 use App\Models\Backup;
 use App\Models\BackupFile;
@@ -10,6 +11,7 @@ use App\Notifications\BackupOverdue;
 use App\Notifications\BackupRecovered;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
 uses(RefreshDatabase::class);
@@ -157,4 +159,18 @@ test('an alerted backup that is still overdue stays quiet', function () {
     $this->artisan('backups:check-health')->assertSuccessful();
 
     Notification::assertNothingSent();
+});
+
+test('a failing check is logged and does not stop the sweep', function () {
+    vitoPestUnitCommandsCheckBackupHealthCommandTestCreateBackup();
+    vitoPestUnitCommandsCheckBackupHealthCommandTestCreateBackup();
+    Log::spy();
+    $this->mock(CheckBackupHealth::class)
+        ->shouldReceive('check')
+        ->twice()
+        ->andThrow(new RuntimeException('channel down'));
+
+    $this->artisan('backups:check-health')->assertSuccessful();
+
+    Log::shouldHaveReceived('warning')->twice();
 });

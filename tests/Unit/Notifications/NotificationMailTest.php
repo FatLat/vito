@@ -8,6 +8,8 @@ use App\Models\Deployment;
 use App\Models\Project;
 use App\Models\StorageProvider;
 use App\Notifications\BackupFailed;
+use App\Notifications\BackupOverdue;
+use App\Notifications\BackupRecovered;
 use App\Notifications\DeploymentCompleted;
 use App\Notifications\ServerInstallationFailed;
 use App\Notifications\ServerInstallationSucceed;
@@ -75,6 +77,25 @@ test('backup failed links to backup with error level', function () {
 
     expect($message->level)->toBe('error');
     expect($message->actionUrl)->toBe(url('/servers/'.$this->server->id.'/backups/'.$backup->id));
+});
+
+test('backup overdue and recovered link to the backup', function () {
+    $backup = Backup::factory()->create([
+        'server_id' => $this->server->id,
+        'storage_id' => StorageProvider::factory()->create()->id,
+        'database_id' => Database::factory()->create(['server_id' => $this->server->id])->id,
+    ]);
+    $url = url('/servers/'.$this->server->id.'/backups/'.$backup->id);
+
+    $overdue = new BackupOverdue($backup);
+    expect($overdue->toEmail($this->notificationChannel)->level)->toBe('error');
+    expect($overdue->toEmail($this->notificationChannel)->actionUrl)->toBe($url);
+    expect($overdue->rawText())->toContain($this->server->name)->toContain($url);
+
+    $recovered = new BackupRecovered($backup);
+    expect($recovered->toEmail($this->notificationChannel)->level)->toBe('success');
+    expect($recovered->toEmail($this->notificationChannel)->actionUrl)->toBe($url);
+    expect($recovered->rawText())->toContain($this->server->name)->toContain($url);
 });
 
 test('webhook deployment failed links to logs with error level', function () {
