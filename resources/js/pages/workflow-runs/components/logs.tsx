@@ -1,4 +1,5 @@
 import LogOutput from '@/components/log-output';
+import AnsiText from '@/components/ansi-text';
 import { WorkflowRun } from '@/types/workflow-run';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
@@ -53,7 +54,7 @@ export default function Logs({ workflowRun }: { workflowRun: WorkflowRun }) {
       <>
         {isLoading && 'Loading...'}
         {error && <div className="text-red-500">Error: {error}</div>}
-        {content && !error && content}
+        {content && !error && <AnsiText text={content} />}
       </>
     </LogOutput>
   );
