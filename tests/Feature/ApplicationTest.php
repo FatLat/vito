@@ -2,6 +2,7 @@
 
 use App\Actions\Site\UpdateEnv;
 use App\Enums\DeploymentStatus;
+use App\Enums\DeploymentTrigger;
 use App\Enums\UserRole;
 use App\Enums\WorkerStatus;
 use App\Events\SocketEvent;
@@ -151,6 +152,8 @@ test('deploy classic', function () {
     $this->assertDatabaseHas('deployments', [
         'site_id' => $this->site->id,
         'status' => DeploymentStatus::FINISHED,
+        'user_id' => $this->user->id,
+        'trigger' => DeploymentTrigger::MANUAL,
     ]);
 
     SSH::assertExecutedContains('cd /home/vito/'.$this->site->domain);
@@ -361,7 +364,9 @@ test('rollback', function () {
         'site_id' => $this->site->id,
         'status' => DeploymentStatus::FINISHED,
         'active' => true,
+        'rolled_back_by_id' => $this->user->id,
     ]);
+    expect($oldRelease->refresh()->rolled_back_at)->not->toBeNull();
 
     SSH::assertExecutedContains('ln -sfn');
 });
@@ -929,6 +934,8 @@ test('git hook deployment', function (string $provider, array $webhook, string $
     ]);
 
     $deployment = $this->site->deployments()->first();
+    expect($deployment->trigger)->toBe(DeploymentTrigger::WEBHOOK);
+    expect($deployment->user_id)->toBeNull();
     expect($deployment->commit_data['name'])->toEqual('saeed');
     expect($deployment->commit_data['email'])->toEqual('saeed@vitodeploy.com');
 })->with('hookData');

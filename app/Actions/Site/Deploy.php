@@ -4,6 +4,7 @@ namespace App\Actions\Site;
 
 use App\DTOs\SocketEventDTO;
 use App\Enums\DeploymentStatus;
+use App\Enums\DeploymentTrigger;
 use App\Events\SocketEvent;
 use App\Exceptions\DeploymentScriptIsEmptyException;
 use App\Exceptions\ReverseProxyNotConfiguredException;
@@ -12,6 +13,7 @@ use App\Jobs\Site\DeployJob;
 use App\Models\Deployment;
 use App\Models\ServerLog;
 use App\Models\Site;
+use App\Models\User;
 
 class Deploy
 {
@@ -19,7 +21,7 @@ class Deploy
      * @throws DeploymentScriptIsEmptyException
      * @throws ReverseProxyNotConfiguredException
      */
-    public function run(Site $site, bool $modern = true): Deployment
+    public function run(Site $site, bool $modern = true, ?User $user = null, DeploymentTrigger $trigger = DeploymentTrigger::MANUAL): Deployment
     {
         $site->type()->assertReadyToDeploy();
 
@@ -33,6 +35,8 @@ class Deploy
 
         $deployment = new Deployment([
             'site_id' => $site->id,
+            'user_id' => $user?->id,
+            'trigger' => $trigger,
             'deployment_script_id' => $site->deploymentScript->id,
             'status' => DeploymentStatus::DEPLOYING,
         ]);

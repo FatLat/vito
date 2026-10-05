@@ -43,6 +43,20 @@ const commitCell = ({ row }: CellRenderProps) => {
   );
 };
 
+const deployedByCell = ({ row }: CellRenderProps) => {
+  const trigger = row.trigger as string | null;
+  const rolledBackBy = row.rolled_back_by as string | null;
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="inline-flex items-center gap-2">
+        {(row.deployed_by as string | null) ?? <span className="text-muted-foreground">-</span>}
+        {trigger && trigger !== 'manual' && <Badge variant="outline">{trigger}</Badge>}
+      </div>
+      {rolledBackBy && <span className="text-muted-foreground text-xs">Rolled back by {rolledBackBy}</span>}
+    </div>
+  );
+};
+
 const releaseCell = ({ row }: CellRenderProps) => (
   <div className="inline-flex items-center gap-2">
     {(row.release as string | null) ?? ''}
@@ -141,7 +155,7 @@ export default function AppWithDeployment() {
 
         <VitoTable
           tableData={page.props.deployments}
-          cellRenderers={{ commit: commitCell, release: releaseCell }}
+          cellRenderers={{ commit: commitCell, release: releaseCell, deployed_by: deployedByCell }}
           actions={(row: Row) => {
             const deployment = asRow<Deployment>(row, ['id', 'site_id', 'server_id']);
             return (

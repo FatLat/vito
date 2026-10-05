@@ -76,6 +76,31 @@ properties:
   active:
     type: boolean
     example: true
+  trigger:
+    type: string
+    nullable: true
+    enum: ['manual', 'api', 'webhook', 'workflow']
+    description: What started the deployment (null for deployments made before this was recorded)
+    example: 'manual'
+  trigger_color:
+    type: string
+    nullable: true
+    enum: ['gray', 'info', 'success', 'warning']
+    example: 'gray'
+  deployed_by:
+    type: string
+    nullable: true
+    description: Name of the user who started the deployment (null for webhooks)
+    example: 'Jane Doe'
+  rolled_back_by:
+    type: string
+    nullable: true
+    description: Name of the user who last rolled back to this release
+    example: 'Jane Doe'
+  rolled_back_at:
+    type: string
+    format: date-time
+    nullable: true
   created_at:
     type: string
     format: date-time

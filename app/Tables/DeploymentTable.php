@@ -20,7 +20,7 @@ class DeploymentTable extends Table
     protected function query(): void
     {
         $this->perPage = config('web.pagination_size');
-        $this->query->with('log', 'site');
+        $this->query->with('log', 'site', 'user', 'rolledBackBy');
     }
 
     protected function columns(): array
@@ -30,6 +30,10 @@ class DeploymentTable extends Table
             Column::make('commit', 'Commit'),
             DateTimeColumn::make('created_at', 'Deployed At')->sortable()->toLocal(),
             EnumColumn::make('status', 'Status')->sortable(),
+            Column::make('deployed_by', 'By')->value(fn (Deployment $deployment): ?string => $deployment->user?->name),
+            Column::data('trigger', fn (Deployment $deployment): ?string => $deployment->trigger?->getText()),
+            Column::data('rolled_back_by', fn (Deployment $deployment): ?string => $deployment->rolledBackBy?->name),
+            Column::data('rolled_back_at', fn (Deployment $deployment): ?string => $deployment->rolled_back_at?->toIso8601String()),
             Column::make('release', 'Release'),
             Column::data('site_id'),
             Column::data('server_id', fn (Deployment $deployment) => $deployment->site->server_id),

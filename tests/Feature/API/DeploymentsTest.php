@@ -93,10 +93,13 @@ test('deploy site', function () {
         ->assertJsonStructure([
             'id',
             'status',
-        ]);
+        ])
+        ->assertJsonPath('trigger', 'api')
+        ->assertJsonPath('deployed_by', $this->user->name);
 
     $this->assertDatabaseHas('deployments', [
         'site_id' => $site->id,
         'status' => DeploymentStatus::FINISHED,
+        'user_id' => $this->user->id,
     ]);
 });

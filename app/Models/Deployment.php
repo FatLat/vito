@@ -3,12 +3,20 @@
 namespace App\Models;
 
 use App\Enums\DeploymentStatus;
+use App\Enums\DeploymentTrigger;
+use Carbon\Carbon;
 use Database\Factories\DeploymentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property int $site_id
+ * @property ?int $user_id
+ * @property ?DeploymentTrigger $trigger
+ * @property ?int $rolled_back_by_id
+ * @property ?Carbon $rolled_back_at
+ * @property ?User $user
+ * @property ?User $rolledBackBy
  * @property int $deployment_script_id
  * @property int $log_id
  * @property string $commit_id
@@ -28,6 +36,8 @@ class Deployment extends AbstractModel
 
     protected $fillable = [
         'site_id',
+        'user_id',
+        'trigger',
         'deployment_script_id',
         'log_id',
         'commit_id',
@@ -44,6 +54,10 @@ class Deployment extends AbstractModel
         'commit_data' => 'json',
         'active' => 'boolean',
         'status' => DeploymentStatus::class,
+        'trigger' => DeploymentTrigger::class,
+        'user_id' => 'integer',
+        'rolled_back_by_id' => 'integer',
+        'rolled_back_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -73,6 +87,22 @@ class Deployment extends AbstractModel
     public function site(): BelongsTo
     {
         return $this->belongsTo(Site::class);
+    }
+
+    /**
+     * @return BelongsTo<User, covariant $this>
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<User, covariant $this>
+     */
+    public function rolledBackBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rolled_back_by_id');
     }
 
     /**

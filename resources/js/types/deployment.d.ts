@@ -18,6 +18,11 @@ export interface Deployment {
   status_color: 'gray' | 'success' | 'info' | 'warning' | 'danger';
   release?: string;
   active: boolean;
+  trigger: string | null;
+  trigger_color: 'gray' | 'success' | 'info' | 'warning' | 'danger' | null;
+  deployed_by: string | null;
+  rolled_back_by: string | null;
+  rolled_back_at: string | null;
   created_at: string;
   updated_at: string;
 
