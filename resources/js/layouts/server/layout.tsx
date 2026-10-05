@@ -1,5 +1,6 @@
 import { type NavItem } from '@/types';
 import {
+  ActivityIcon,
   BoxIcon,
   ChartLineIcon,
   ClockIcon,
@@ -10,6 +11,7 @@ import {
   DatabaseIcon,
   FlameIcon,
   GlobeIcon,
+  HistoryIcon,
   HomeIcon,
   KeyIcon,
   ListEndIcon,
@@ -18,7 +20,9 @@ import {
   LogsIcon,
   MousePointerClickIcon,
   NetworkIcon,
+  PackageIcon,
   RocketIcon,
+  ServerCogIcon,
   Settings2Icon,
   ShieldIcon,
   SignpostIcon,
@@ -240,6 +244,38 @@ export default function ServerLayout({ children }: { children: ReactNode }) {
       href: `/servers/${page.props.server.id}/monitoring`,
       icon: ChartLineIcon,
       isDisabled: isMenuDisabled,
+    },
+    {
+      title: 'System',
+      href: `/servers/${page.props.server.id}/system`,
+      icon: ServerCogIcon,
+      isDisabled: isMenuDisabled,
+      children: [
+        {
+          title: 'Overview',
+          href: `/servers/${page.props.server.id}/system`,
+          onlyActivePath: `/servers/${page.props.server.id}/system`,
+          icon: ServerCogIcon,
+        },
+        {
+          title: 'Processes',
+          href: `/servers/${page.props.server.id}/system/processes`,
+          onlyActivePath: `/servers/${page.props.server.id}/system/processes`,
+          icon: ActivityIcon,
+        },
+        {
+          title: 'Updates',
+          href: `/servers/${page.props.server.id}/system/updates`,
+          onlyActivePath: `/servers/${page.props.server.id}/system/updates`,
+          icon: PackageIcon,
+        },
+        {
+          title: 'Command history',
+          href: `/servers/${page.props.server.id}/system/commands`,
+          onlyActivePath: `/servers/${page.props.server.id}/system/commands`,
+          icon: HistoryIcon,
+        },
+      ],
     },
     {
       title: 'Logs',
