@@ -22,3 +22,5 @@
 | V-18 | Güvenlik puanı (18) yapılmaz | Resmi Vito 4.1 Security sayfasında puan, parola girişi, root girişi, Fail2ban, güvenlik duvarı ve otomatik güncelleme kartları var |
 | V-19 | Süreçler, komut geçmişi, süreç sonlandırma ve log temizleme yalnızca admin/owner (`manage`); genel bakış ve güncellemeler her proje üyesine açık | Süreç komut satırları ve shell geçmişi parola içerebilir; admin zaten root terminali (Console) açabildiği için owner'a daraltmak ek koruma sağlamaz |
 | V-20 | Log temizleme yalnızca `/var/log` altındaki yollar için; `..` ve kabuk karakterleri reddedilir, sunucuda `realpath` ile çözülen yol da `/var/log` içinde olmalı | Yol SSH komutuna giriyor; `/var/log` içindeki bir symlink başka bir dosyayı boşaltmasın |
+| V-21 | Projeye göre gruplama ve özelleştirilebilir genel bakış kutucukları yapılmaz | Tek proje kullanılıyor; kod büyür, fayda yok |
+| V-22 | Sayfa boyutu tablo sınıflarına dokunmadan `ApplyPageSize` ara katmanıyla `web.pagination_size` üzerinden uygulanır | 20'den fazla tablo sınıfı değişmez, resmi Vito ile birleştirmelerde çakışma çıkmaz |

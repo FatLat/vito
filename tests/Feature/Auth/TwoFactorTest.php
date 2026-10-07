@@ -84,6 +84,6 @@ test('see two factor challenge', function () {
     ])
         ->assertSessionDoesntHaveErrors();
 
-    $response->assertRedirect(route('servers'));
+    $response->assertRedirect(route('overview'));
     $this->assertAuthenticatedAs($user);
 });

@@ -40,7 +40,7 @@ class ServerController extends Controller
         $this->authorize('viewAny', [Server::class, $project]);
 
         return Inertia::render('servers/index', [
-            'servers' => ServerTable::make($project->servers()->latest())->simplePaginate(),
+            'servers' => ServerTable::make($project->servers()->latest())->paginate(),
             'public_key' => __('servers.create.public_key_text', ['public_key' => get_public_key_content()]),
             'server_providers' => ServerProviderResource::collection(ServerProvider::getByProjectId($project->id, user())->get()),
         ]);

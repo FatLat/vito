@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import {
   ChevronLeft,
@@ -17,6 +18,15 @@ import {
   ChevronDownIcon,
   LoaderCircleIcon,
 } from 'lucide-react';
+
+const PAGE_SIZES = [10, 25, 50];
+
+function changePageSize(tableData: InertiaTableData, size: string): void {
+  const params = Object.fromEntries(new URLSearchParams(window.location.search));
+  params.per_page = size;
+  params[tableData.identifier ? `${tableData.identifier}Page` : 'page'] = '1';
+  router.get(window.location.pathname, params, { preserveScroll: true, preserveState: true });
+}
 
 interface VitoTableProps extends Omit<InertiaTableProps, 'tableData'> {
   tableData: InertiaTableData;
@@ -153,7 +163,21 @@ export function VitoTable({ tableData, children, modal, isFetching, ...props }: 
 
         {tableData.meta && (
           <div className="flex items-center justify-between border-t px-4 py-3">
-            <div className="text-muted-foreground flex items-center text-sm">
+            <div className="text-muted-foreground flex items-center gap-4 text-sm">
+              {!modal && (
+                <Select value={String(tableData.meta.per_page)} onValueChange={(size) => changePageSize(tableData, size)} disabled={processing}>
+                  <SelectTrigger className="h-8 w-20" aria-label="Rows per page">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAGE_SIZES.map((size) => (
+                      <SelectItem key={size} value={String(size)}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               {tableData.meta.from && tableData.meta.to && (
                 <span>
                   Showing {tableData.meta.from} to {tableData.meta.to}

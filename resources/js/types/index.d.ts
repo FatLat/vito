@@ -30,6 +30,7 @@ export interface NavItem {
   children?: NavItem[];
   hidden?: boolean;
   external?: boolean;
+  badge?: number;
 }
 
 export interface Configs {
