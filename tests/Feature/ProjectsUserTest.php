@@ -215,7 +215,7 @@ test('app admin can create an account and add it to the project', function () {
     $this->user->update(['is_admin' => true]);
     $this->actingAs($this->user);
     $project = $this->user->ensureHasDefaultProject();
-    $project->users()->create(['email' => 'friend@example.com', 'role' => UserRole::USER]);
+    $project->users()->create(['email' => 'Friend@Example.com', 'role' => UserRole::USER]);
 
     $this
         ->from(route('projects'))
@@ -233,7 +233,7 @@ test('app admin can create an account and add it to the project', function () {
     expect($friend->is_admin)->toBeFalse()
         ->and($friend->current_project_id)->toBe($project->id)
         ->and($project->role($friend))->toBe(UserRole::ADMIN)
-        ->and($project->users()->whereNull('user_id')->where('email', 'friend@example.com')->exists())->toBeFalse();
+        ->and($project->users()->whereNull('user_id')->exists())->toBeFalse();
 });
 
 test('project role must be admin or user when creating an account', function () {
@@ -270,6 +270,22 @@ test('only app admins can create accounts from a project', function () {
     $this->user->update(['is_admin' => false]);
     $this->actingAs($this->user);
     $project = $this->user->ensureHasDefaultProject();
+
+    $this->post(route('projects.users.create', ['project' => $project]), [
+        'name' => 'Friend',
+        'email' => 'friend@example.com',
+        'password' => 'secret-pass',
+        'role' => UserRole::USER->value,
+    ])->assertForbidden();
+
+    $this->assertDatabaseMissing('users', ['email' => 'friend@example.com']);
+});
+
+test('app admins without write access to the project cannot create accounts in it', function () {
+    $this->user->update(['is_admin' => true]);
+    $project = $this->user->ensureHasDefaultProject();
+    $project->users()->where('user_id', $this->user->id)->update(['role' => UserRole::USER]);
+    $this->actingAs($this->user);
 
     $this->post(route('projects.users.create', ['project' => $project]), [
         'name' => 'Friend',

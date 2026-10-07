@@ -26,7 +26,7 @@ import RolePermissions from '@/pages/projects/components/role-permissions';
 export default function Invite({ project, onInviteSent, children }: { project: Project; onInviteSent?: () => void; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [createAccount, setCreateAccount] = useState(false);
-  const canCreateAccount = usePage<SharedData>().props.auth.user.is_admin;
+  const canCreateAccount = usePage<SharedData>().props.auth.user?.is_admin ?? false;
   const form = useForm({
     name: '',
     email: '',
@@ -34,15 +34,27 @@ export default function Invite({ project, onInviteSent, children }: { project: P
     role: 'user',
   });
 
+  const changeOpen = (value: boolean) => {
+    setOpen(value);
+    if (!value) {
+      setCreateAccount(false);
+      form.reset();
+      form.clearErrors();
+    }
+  };
+
+  const toggleCreateAccount = (value: boolean) => {
+    setCreateAccount(value);
+    form.setData({ ...form.data, name: '', password: '' });
+    form.clearErrors();
+  };
+
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const url = createAccount ? `/settings/projects/${project.id}/users/create` : `/settings/projects/${project.id}/users`;
-    form.transform((data) => (createAccount ? data : { email: data.email, role: data.role }));
     form.post(url, {
       onSuccess: () => {
-        setOpen(false);
-        setCreateAccount(false);
-        form.reset();
+        changeOpen(false);
         if (onInviteSent) {
           onInviteSent();
         }
@@ -50,7 +62,7 @@ export default function Invite({ project, onInviteSent, children }: { project: P
     });
   };
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={changeOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
@@ -62,7 +74,7 @@ export default function Invite({ project, onInviteSent, children }: { project: P
             {canCreateAccount && (
               <FormField>
                 <div className="flex items-center gap-2">
-                  <Checkbox id="create-account" checked={createAccount} onCheckedChange={(checked) => setCreateAccount(checked === true)} />
+                  <Checkbox id="create-account" checked={createAccount} onCheckedChange={(checked) => toggleCreateAccount(checked === true)} />
                   <Label htmlFor="create-account">Create an account instead of sending an invitation</Label>
                 </div>
               </FormField>
@@ -70,13 +82,13 @@ export default function Invite({ project, onInviteSent, children }: { project: P
             {createAccount && (
               <FormField>
                 <Label htmlFor="name">Name</Label>
-                <Input id="name" value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} />
+                <Input id="name" name="name" autoComplete="off" value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} />
                 <InputError message={form.errors.name} />
               </FormField>
             )}
             <FormField>
               <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" onChange={(e) => form.setData('email', e.target.value)} />
+              <Input id="email" name="email" type="email" value={form.data.email} onChange={(e) => form.setData('email', e.target.value)} />
               <InputError message={form.errors.email} />
             </FormField>
             {createAccount && (
@@ -84,6 +96,7 @@ export default function Invite({ project, onInviteSent, children }: { project: P
                 <Label htmlFor="password">Password</Label>
                 <PasswordInput
                   id="password"
+                  name="password"
                   value={form.data.password}
                   onChange={(e) => form.setData('password', e.target.value)}
                   autoComplete="new-password"
