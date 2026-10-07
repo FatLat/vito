@@ -28,7 +28,7 @@ class WorkflowRunController extends Controller
 
         return inertia('workflow-runs/index', [
             'workflow' => WorkflowResource::make($workflow),
-            'workflowRuns' => WorkflowRunTable::make($workflow->runs())->simplePaginate(),
+            'workflowRuns' => WorkflowRunTable::make($workflow->runs())->paginate(),
         ]);
     }
 

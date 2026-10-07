@@ -104,7 +104,7 @@ class HandleInertiaRequests extends Middleware
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => $user ? [
                 'user' => UserResource::make($user->load('projects')),
-                'currentProject' => ProjectResource::make($currentProject),
+                'currentProject' => ProjectResource::make($currentProject?->loadCount(['servers', 'sites'])),
             ] : null,
             'csrf_token' => csrf_token(),
             'bootstrap_version' => app(GetBootstrap::class)->version(),

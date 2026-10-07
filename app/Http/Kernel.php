@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\ApplyPageSize;
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\CanSeeProjectMiddleware;
 use App\Http\Middleware\EncryptCookies;
@@ -67,6 +68,7 @@ class Kernel extends HttpKernel
             SubstituteBindings::class,
             HandleInertiaRequests::class,
             HandleAppearance::class,
+            ApplyPageSize::class,
         ],
 
         'api' => [

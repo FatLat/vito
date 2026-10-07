@@ -35,7 +35,7 @@ class SiteController extends Controller
         $this->authorize('viewAny', user()->currentProject);
 
         return Inertia::render('sites/index', [
-            'sites' => SiteTable::make(user()->currentProject->sites())->simplePaginate(),
+            'sites' => SiteTable::make(user()->currentProject->sites())->paginate(),
         ]);
     }
 
@@ -45,7 +45,7 @@ class SiteController extends Controller
         $this->authorize('viewAny', [Site::class, $server]);
 
         return Inertia::render('sites/index', [
-            'sites' => SiteTable::make($server->sites())->forServer($server)->simplePaginate(),
+            'sites' => SiteTable::make($server->sites())->forServer($server)->paginate(),
         ]);
     }
 

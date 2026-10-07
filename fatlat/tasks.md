@@ -44,11 +44,11 @@ Sahip: **L** Latif · **C** Claude. Durum: ☐ bekliyor · ◐ sürüyor · ☑ 
 ## F5 — Gezinme ve tablolar
 | No | Görev | Sahip | Durum |
 |---|---|---|---|
-| V-501 | Yeni ana menü | C | ☐ |
-| V-502 | Sunucu menüsü grupları | C | ☐ |
-| V-503 | Site sekmeleri | C | ☐ |
-| V-504 | Tablo iyileştirmeleri | C | ☐ |
-| V-505 | Genel bakış ekranı | C | ☐ |
+| V-501 | Ana menü: bağlam menüsü olmayan sayfalarda genişletilebilir (yazılar, sunucu/site sayıları, durum çerezde), en üstte Genel bakış; mevcut öğeler korundu | C | ☑ |
+| V-502 | Sunucu menüsü başlıklarla gruplandı: Applications, Security, System | C | ☑ |
+| V-503 | Site sayfalarında üstte sekmeler; sunucu menüsündeki site alt menüsü kaldırıldı | C | ☑ |
+| V-504 | Tablolar: sayfa başına 10/25/50 (`per_page` adreste); sunucu, site, yedek ve workflow çalıştırma listelerinde toplam ve sayfa sayısı | C | ☑ |
+| V-505 | Genel bakış (`/overview`, girişten sonra açılış): sayılar, son sunucular/siteler, sorunlu yedekler, 14 gün içinde bitecek SSL'ler | C | ☑ |
 
 ## F6 — Projeler
 | No | Görev | Sahip | Durum |

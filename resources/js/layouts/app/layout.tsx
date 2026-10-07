@@ -1,6 +1,6 @@
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppHeader } from '@/components/app-header';
-import { NavItem, SharedData } from '@/types';
+import { NavGroup, NavItem, SharedData } from '@/types';
 import { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { usePage } from '@inertiajs/react';
@@ -17,9 +17,11 @@ import DialogHost from '@/components/dialogs/dialog-host';
 export default function Layout({
   children,
   secondNavItems,
+  secondNavGroups,
   secondNavTitle,
 }: PropsWithChildren<{
   secondNavItems?: NavItem[];
+  secondNavGroups?: NavGroup[];
   secondNavTitle?: string;
 }>) {
   const page = usePage<SharedData>();
@@ -68,13 +70,17 @@ export default function Layout({
 
   const [queryClient] = useState(() => new QueryClient());
 
+  const navGroups = secondNavGroups ?? [{ title: '', items: secondNavItems ?? [] }];
+  const hasSecondNav = navGroups.some((group) => group.items.length > 0);
+  const [menuExpanded] = useState(() => typeof document !== 'undefined' && document.cookie.includes('sidebar_state=true'));
+
   const showBootstrapError = bootstrapStatus === 'error' && !bootstrapConfigsLoaded;
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <SidebarProvider defaultOpen={!!(secondNavItems && secondNavItems.length > 0)}>
-          <AppSidebar secondNavItems={secondNavItems} secondNavTitle={secondNavTitle} />
+        <SidebarProvider defaultOpen={hasSecondNav || menuExpanded}>
+          <AppSidebar secondNavGroups={navGroups} secondNavTitle={secondNavTitle} />
           <SidebarInset>
             <AppHeader socketStatus={socketStatus} socketReconnect={socketReconnect} />
             <div className="flex flex-1 flex-col">

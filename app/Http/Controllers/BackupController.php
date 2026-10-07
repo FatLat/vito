@@ -30,7 +30,7 @@ class BackupController extends Controller
         $this->authorize('view', user()->currentProject);
 
         return Inertia::render('backups/index', [
-            'backups' => BackupTable::make(user()->currentProject->backups())->simplePaginate(),
+            'backups' => BackupTable::make(user()->currentProject->backups())->paginate(),
         ]);
     }
 
@@ -40,7 +40,7 @@ class BackupController extends Controller
         $this->authorize('viewAny', [Backup::class, $server]);
 
         return Inertia::render('backups/index', [
-            'backups' => BackupTable::make($server->backups())->forServer($server)->simplePaginate(),
+            'backups' => BackupTable::make($server->backups())->forServer($server)->paginate(),
         ]);
     }
 

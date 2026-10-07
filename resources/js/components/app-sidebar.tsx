@@ -6,14 +6,17 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubItem,
+  useSidebar,
 } from '@/components/ui/sidebar';
-import { type NavItem, SharedData } from '@/types';
+import { type NavGroup, type NavItem, SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import {
   BookOpen,
@@ -22,10 +25,12 @@ import {
   CogIcon,
   Folder,
   Globe,
+  LayoutDashboardIcon,
   ListEndIcon,
   LogsIcon,
   MousePointerClickIcon,
   NetworkIcon,
+  PanelLeftIcon,
   ServerIcon,
   Settings2Icon,
   WorkflowIcon,
@@ -37,11 +42,19 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useConfigs } from '@/stores/bootstrap-store';
 
-export function AppSidebar({ secondNavItems, secondNavTitle }: { secondNavItems?: NavItem[]; secondNavTitle?: string }) {
+export function AppSidebar({ secondNavGroups, secondNavTitle }: { secondNavGroups: NavGroup[]; secondNavTitle?: string }) {
   const page = usePage<SharedData>();
   const dashboardUrls = useConfigs()?.dashboard_urls;
+  const { toggleSidebar } = useSidebar();
+  const hasSecondNav = secondNavGroups.some((group) => group.items.length > 0);
+  const currentProject = page.props.auth.currentProject;
 
   const mainNavItems: NavItem[] = [
+    {
+      title: 'Overview',
+      href: '/overview',
+      icon: LayoutDashboardIcon,
+    },
     {
       title: 'Networks',
       href: '/networks',
@@ -51,11 +64,13 @@ export function AppSidebar({ secondNavItems, secondNavTitle }: { secondNavItems?
       title: 'Servers',
       href: '/servers',
       icon: ServerIcon,
+      badge: currentProject?.servers_count,
     },
     {
       title: 'Sites',
       href: '/sites',
       icon: MousePointerClickIcon,
+      badge: currentProject?.sites_count,
     },
     {
       title: 'Backups',
@@ -120,12 +135,12 @@ export function AppSidebar({ secondNavItems, secondNavTitle }: { secondNavItems?
       {/* This is the first sidebar */}
       {/* We disable collapsible and adjust width to icon. */}
       {/* This will make the sidebar appear as icons. */}
-      <Sidebar collapsible="none" className="h-auto !w-[calc(var(--sidebar-width-icon)_+_1px)] border-r">
+      <Sidebar collapsible="none" className={hasSecondNav ? 'h-auto !w-[calc(var(--sidebar-width-icon)_+_1px)] border-r' : 'h-auto flex-1'}>
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild className="md:h-8 md:p-0">
-                <Link href="/servers" prefetch>
+                <Link href="/overview" prefetch>
                   <Tooltip>
                     <TooltipTrigger>
                       <AppLogo />
@@ -161,6 +176,7 @@ export function AppSidebar({ secondNavItems, secondNavTitle }: { secondNavItems?
                         </Link>
                       )}
                     </SidebarMenuButton>
+                    {!hasSecondNav && item.badge !== undefined && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>
@@ -169,6 +185,14 @@ export function AppSidebar({ secondNavItems, secondNavTitle }: { secondNavItems?
         </SidebarContent>
         <SidebarFooter className="hidden md:flex">
           <SidebarMenu>
+            {!hasSecondNav && (
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={toggleSidebar} tooltip={{ children: 'Toggle menu', hidden: false }}>
+                  <PanelLeftIcon />
+                  <span className="sr-only">Toggle menu</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
             {footerNavItems.map((item) => (
               <SidebarMenuItem key={`${item.title}-${item.href}`} hidden={item.hidden}>
                 <SidebarMenuButton asChild tooltip={{ children: item.title, hidden: false }}>
@@ -187,7 +211,7 @@ export function AppSidebar({ secondNavItems, secondNavTitle }: { secondNavItems?
       {/* This is the second sidebar */}
       {/* We enable collapsible and adjust width to icon. */}
       {/* This will make the sidebar appear as icons. */}
-      {secondNavItems && secondNavItems.length > 0 && (
+      {hasSecondNav && (
         <Sidebar collapsible="none" className="flex flex-1">
           <SidebarHeader className="hidden h-12 border-b p-0 md:flex">
             <div className="flex h-full items-center p-2">
@@ -195,89 +219,94 @@ export function AppSidebar({ secondNavItems, secondNavTitle }: { secondNavItems?
             </div>
           </SidebarHeader>
           <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {secondNavItems.map((item) => {
-                    const isActive = item.onlyActivePath ? currentPath() === item.href : currentPath().startsWith(item.href);
+            {secondNavGroups
+              .filter((group) => group.items.some((item) => !item.hidden))
+              .map((group) => (
+                <SidebarGroup key={group.title || 'navigation'}>
+                  {group.title && <SidebarGroupLabel>{group.title}</SidebarGroupLabel>}
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {group.items.map((item) => {
+                        const isActive = item.onlyActivePath ? currentPath() === item.href : currentPath().startsWith(item.href);
 
-                    if (item.children && item.children.length > 0) {
-                      const groupActive =
-                        isActive ||
-                        item.children.some((childItem) =>
-                          childItem.hidden
-                            ? false
-                            : childItem.onlyActivePath
-                              ? currentPath() === childItem.href
-                              : currentPath().startsWith(childItem.href),
-                        );
+                        if (item.children && item.children.length > 0) {
+                          const groupActive =
+                            isActive ||
+                            item.children.some((childItem) =>
+                              childItem.hidden
+                                ? false
+                                : childItem.onlyActivePath
+                                  ? currentPath() === childItem.href
+                                  : currentPath().startsWith(childItem.href),
+                            );
 
-                      return (
-                        <Collapsible key={`${item.title}-${item.href}`} defaultOpen={groupActive} className="group/collapsible">
-                          <SidebarMenuItem>
-                            <CollapsibleTrigger asChild>
-                              <SidebarMenuButton disabled={item.isDisabled || false} hidden={item.hidden}>
-                                {item.icon && <item.icon />}
-                                <span>{item.title}</span>
-                                <ChevronRightIcon className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                              </SidebarMenuButton>
-                            </CollapsibleTrigger>
-                            <CollapsibleContent>
-                              <SidebarMenuSub>
-                                {item.children.map((childItem) => (
-                                  <SidebarMenuSubItem key={`${childItem.title}-${childItem.href}`} hidden={childItem.hidden}>
-                                    <SidebarMenuButton
-                                      asChild
-                                      isActive={
-                                        childItem.onlyActivePath ? currentPath() === childItem.href : currentPath().startsWith(childItem.href)
-                                      }
-                                    >
-                                      {childItem.external ? (
-                                        <a href={childItem.href} target="_blank">
-                                          {childItem.icon && <childItem.icon />}
-                                          <span>{childItem.title}</span>
-                                        </a>
-                                      ) : (
-                                        <Link href={childItem.href}>
-                                          {childItem.icon && <childItem.icon />}
-                                          <span>{childItem.title}</span>
-                                        </Link>
-                                      )}
-                                    </SidebarMenuButton>
-                                  </SidebarMenuSubItem>
-                                ))}
-                              </SidebarMenuSub>
-                            </CollapsibleContent>
+                          return (
+                            <Collapsible key={`${item.title}-${item.href}`} defaultOpen={groupActive} className="group/collapsible">
+                              <SidebarMenuItem>
+                                <CollapsibleTrigger asChild>
+                                  <SidebarMenuButton disabled={item.isDisabled || false} hidden={item.hidden}>
+                                    {item.icon && <item.icon />}
+                                    <span>{item.title}</span>
+                                    <ChevronRightIcon className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                                  </SidebarMenuButton>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent>
+                                  <SidebarMenuSub>
+                                    {item.children.map((childItem) => (
+                                      <SidebarMenuSubItem key={`${childItem.title}-${childItem.href}`} hidden={childItem.hidden}>
+                                        <SidebarMenuButton
+                                          asChild
+                                          isActive={
+                                            childItem.onlyActivePath ? currentPath() === childItem.href : currentPath().startsWith(childItem.href)
+                                          }
+                                        >
+                                          {childItem.external ? (
+                                            <a href={childItem.href} target="_blank">
+                                              {childItem.icon && <childItem.icon />}
+                                              <span>{childItem.title}</span>
+                                            </a>
+                                          ) : (
+                                            <Link href={childItem.href}>
+                                              {childItem.icon && <childItem.icon />}
+                                              <span>{childItem.title}</span>
+                                            </Link>
+                                          )}
+                                        </SidebarMenuButton>
+                                      </SidebarMenuSubItem>
+                                    ))}
+                                  </SidebarMenuSub>
+                                </CollapsibleContent>
+                              </SidebarMenuItem>
+                            </Collapsible>
+                          );
+                        }
+
+                        return (
+                          <SidebarMenuItem key={`${item.title}-${item.href}`} hidden={item.hidden}>
+                            <SidebarMenuButton isActive={isActive} asChild>
+                              {item.external ? (
+                                <a href={item.href} target="_blank">
+                                  {item.icon && <item.icon />}
+                                  <span>{item.title}</span>
+                                </a>
+                              ) : (
+                                <Link
+                                  href={item.isDisabled ? '#' : item.href}
+                                  disabled={item.isDisabled || false}
+                                  className={item.isDisabled ? 'pointer-events-none opacity-50' : ''}
+                                >
+                                  {item.icon && <item.icon />}
+                                  <span>{item.title}</span>
+                                </Link>
+                              )}
+                            </SidebarMenuButton>
                           </SidebarMenuItem>
-                        </Collapsible>
-                      );
-                    }
-
-                    return (
-                      <SidebarMenuItem key={`${item.title}-${item.href}`} hidden={item.hidden}>
-                        <SidebarMenuButton isActive={isActive} asChild>
-                          {item.external ? (
-                            <a href={item.href} target="_blank">
-                              {item.icon && <item.icon />}
-                              <span>{item.title}</span>
-                            </a>
-                          ) : (
-                            <Link
-                              href={item.isDisabled ? '#' : item.href}
-                              disabled={item.isDisabled || false}
-                              className={item.isDisabled ? 'pointer-events-none opacity-50' : ''}
-                            >
-                              {item.icon && <item.icon />}
-                              <span>{item.title}</span>
-                            </Link>
-                          )}
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+                        );
+                      })}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              ))}
           </SidebarContent>
         </Sidebar>
       )}
