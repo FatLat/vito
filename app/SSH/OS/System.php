@@ -5,10 +5,13 @@ namespace App\SSH\OS;
 use App\Exceptions\SSHError;
 use App\Models\Server;
 use Illuminate\Contracts\View\View;
+use InvalidArgumentException;
 
 class System
 {
     private const KERNEL_PACKAGE = '/^linux-(image|headers|modules|modules-extra|generic|virtual|lowlatency|hwe|tools|cloud-tools|aws|azure|gcp|oracle|kvm)/';
+
+    public const SIGNALS = ['TERM', 'KILL'];
 
     public function __construct(protected Server $server) {}
 
@@ -52,7 +55,7 @@ class System
      */
     public function processes(): array
     {
-        $output = $this->server->ssh()->exec(view('ssh.os.processes'));
+        $output = $this->server->ssh()->exec(view('ssh.os.processes'), timeout: 30);
 
         $processes = [];
         foreach (preg_split('/\R/', $output) ?: [] as $line) {
@@ -78,8 +81,20 @@ class System
     /**
      * @throws SSHError
      */
+    public function clearLog(string $path): void
+    {
+        $this->server->ssh()->exec(view('ssh.os.clear-log', ['path' => $path]), 'clear-log');
+    }
+
+    /**
+     * @throws SSHError
+     */
     public function kill(int $pid, string $signal): void
     {
+        if ($pid < 2 || ! in_array($signal, self::SIGNALS, true)) {
+            throw new InvalidArgumentException('Refusing to send an unsupported signal or to signal init.');
+        }
+
         $this->server->ssh()->exec(
             view('ssh.os.kill-process', ['pid' => $pid, 'signal' => $signal]),
             'kill-process'
@@ -93,7 +108,7 @@ class System
      */
     public function upgradablePackages(): array
     {
-        $output = $this->server->ssh()->exec(view('ssh.os.upgradable-packages'));
+        $output = $this->server->ssh()->exec(view('ssh.os.upgradable-packages'), timeout: 30);
 
         $packages = [];
         foreach (preg_split('/\R/', $output) ?: [] as $line) {

@@ -5,10 +5,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { TableSkeleton } from '@/components/table-skeleton';
 
 function errorMessage(error: unknown): string {
-  if (axios.isAxiosError(error)) {
-    return error.response?.data?.message || error.message;
-  }
-  return 'Could not load data from the server.';
+  const data = axios.isAxiosError(error) ? error.response?.data : undefined;
+  const message = data?.message ?? data?.error;
+  return typeof message === 'string' && message !== '' ? message : 'Could not load data from the server.';
 }
 
 export default function QueryState({ query, cells }: { query: UseQueryResult; cells: number }) {
