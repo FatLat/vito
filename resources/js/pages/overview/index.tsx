@@ -62,7 +62,7 @@ export default function OverviewPage() {
                     <span className="text-muted-foreground text-sm">{tile.title}</span>
                     <span className="text-2xl font-semibold">{tile.value}</span>
                   </div>
-                  <tile.icon className="text-muted-foreground size-6" />
+                  <tile.icon className="text-muted-foreground size-6" aria-hidden />
                 </CardContent>
               </Card>
             </Link>

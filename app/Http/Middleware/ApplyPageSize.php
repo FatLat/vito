@@ -8,16 +8,21 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ApplyPageSize
 {
-    public const SIZES = [10, 25, 50];
-
     public function handle(Request $request, Closure $next): Response
     {
-        $size = $request->integer('per_page');
+        $size = is_string($request->query('per_page')) ? $request->integer('per_page') : 0;
 
-        if (in_array($size, self::SIZES, true)) {
-            config(['web.pagination_size' => $size, 'inertia-table.per_page' => $size]);
+        if (! in_array($size, config('web.pagination_sizes'), true)) {
+            return $next($request);
         }
 
-        return $next($request);
+        $default = config('web.pagination_size');
+        config(['web.pagination_size' => $size]);
+
+        try {
+            return $next($request);
+        } finally {
+            config(['web.pagination_size' => $default]);
+        }
     }
 }

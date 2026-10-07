@@ -41,6 +41,7 @@ export interface Configs {
     [key: string]: string;
   };
   metrics_periods: string[];
+  pagination_sizes: number[];
 
   server_provider: {
     providers: {
@@ -146,6 +147,7 @@ export interface SharedData {
   auth: Auth;
   server?: Server;
   site?: Site;
+  projectCounts?: { servers: number; sites: number } | null;
   csrf_token: string;
   bootstrap_version: string;
   flash?: {
