@@ -210,3 +210,73 @@ test('cannot delete the owner', function () {
             'error' => 'You cannot remove the project owner.',
         ]);
 });
+
+test('app admin can create an account and add it to the project', function () {
+    $this->user->update(['is_admin' => true]);
+    $this->actingAs($this->user);
+    $project = $this->user->ensureHasDefaultProject();
+    $project->users()->create(['email' => 'friend@example.com', 'role' => UserRole::USER]);
+
+    $this
+        ->from(route('projects'))
+        ->post(route('projects.users.create', ['project' => $project]), [
+            'name' => 'Friend',
+            'email' => 'friend@example.com',
+            'password' => 'secret-pass',
+            'role' => UserRole::ADMIN->value,
+            'is_admin' => true,
+        ])
+        ->assertSessionDoesntHaveErrors()
+        ->assertSessionHas('success');
+
+    $friend = User::query()->where('email', 'friend@example.com')->firstOrFail();
+    expect($friend->is_admin)->toBeFalse()
+        ->and($friend->current_project_id)->toBe($project->id)
+        ->and($project->role($friend))->toBe(UserRole::ADMIN)
+        ->and($project->users()->whereNull('user_id')->where('email', 'friend@example.com')->exists())->toBeFalse();
+});
+
+test('project role must be admin or user when creating an account', function () {
+    $this->user->update(['is_admin' => true]);
+    $this->actingAs($this->user);
+    $project = $this->user->ensureHasDefaultProject();
+
+    $this->post(route('projects.users.create', ['project' => $project]), [
+        'name' => 'Friend',
+        'email' => 'friend@example.com',
+        'password' => 'secret-pass',
+        'role' => UserRole::OWNER->value,
+    ])->assertSessionHasErrors('role');
+
+    $this->assertDatabaseMissing('users', ['email' => 'friend@example.com']);
+});
+
+test('a failed account creation leaves nothing behind', function () {
+    $this->user->update(['is_admin' => true]);
+    $this->actingAs($this->user);
+    $project = $this->user->ensureHasDefaultProject();
+
+    $this->post(route('projects.users.create', ['project' => $project]), [
+        'name' => 'Friend',
+        'email' => $this->user->email,
+        'password' => 'secret-pass',
+        'role' => UserRole::USER->value,
+    ])->assertSessionHasErrors('email');
+
+    expect($project->users()->count())->toBe(1);
+});
+
+test('only app admins can create accounts from a project', function () {
+    $this->user->update(['is_admin' => false]);
+    $this->actingAs($this->user);
+    $project = $this->user->ensureHasDefaultProject();
+
+    $this->post(route('projects.users.create', ['project' => $project]), [
+        'name' => 'Friend',
+        'email' => 'friend@example.com',
+        'password' => 'secret-pass',
+        'role' => UserRole::USER->value,
+    ])->assertForbidden();
+
+    $this->assertDatabaseMissing('users', ['email' => 'friend@example.com']);
+});

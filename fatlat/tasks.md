@@ -53,4 +53,4 @@ Sahip: **L** Latif · **C** Claude. Durum: ☐ bekliyor · ◐ sürüyor · ☑ 
 ## F6 — Projeler
 | No | Görev | Sahip | Durum |
 |---|---|---|---|
-| V-601 | Davetler ve hızlı kullanıcı oluşturma | C | ☐ |
+| V-601 | Davet penceresinde "davet yerine hesap oluştur" (yalnızca uygulama admin'i): ad, e-posta, şifre; hesap normal kullanıcı olarak açılır ve seçilen rolle projeye eklenir. Davet listesi resmi Vito'da zaten var | C | ☑ |
