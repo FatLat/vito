@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Project;
 
+use App\Actions\Projects\CreateProjectUser;
 use App\Actions\Projects\InviteToProject;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
+use App\Models\User;
 use App\Models\UserProject;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,6 +28,17 @@ class ProjectUserController extends Controller
         app(InviteToProject::class)->invite($project, $request->input());
 
         return back()->with('success', __('An invitation has been sent to the email address.'));
+    }
+
+    #[Post('/create', name: 'projects.users.create')]
+    public function create(Request $request, Project $project): RedirectResponse
+    {
+        $this->authorize('update', $project);
+        $this->authorize('create', User::class);
+
+        app(CreateProjectUser::class)->create($project, $request->only(['name', 'email', 'password', 'role']));
+
+        return back()->with('success', __('The account has been created and added to the project.'));
     }
 
     #[Delete('{id}', name: 'projects.users.destroy')]
