@@ -70,9 +70,9 @@ export default function Layout({
 
   const [queryClient] = useState(() => new QueryClient());
 
-  const navGroups = secondNavGroups ?? [{ title: '', items: secondNavItems ?? [] }];
-  const hasSecondNav = navGroups.some((group) => group.items.length > 0);
-  const [menuExpanded] = useState(() => typeof document !== 'undefined' && document.cookie.includes('sidebar_state=true'));
+  const navGroups = (secondNavGroups ?? [{ title: '', items: secondNavItems ?? [] }]).filter((group) => group.items.some((item) => !item.hidden));
+  const hasSecondNav = navGroups.length > 0;
+  const [menuExpanded] = useState(() => typeof document !== 'undefined' && /(?:^|;\s*)sidebar_state=true/.test(document.cookie));
 
   const showBootstrapError = bootstrapStatus === 'error' && !bootstrapConfigsLoaded;
 

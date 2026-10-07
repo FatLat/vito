@@ -22,8 +22,6 @@ class ProjectResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'role' => $user ? $this->role($user)->value : null,
-            'servers_count' => $this->whenCounted('servers'),
-            'sites_count' => $this->whenCounted('sites'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'users' => ProjectUserResource::collection($this->whenLoaded('users')),

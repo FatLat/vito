@@ -69,6 +69,7 @@ final class GetBootstrap
             'colors' => config('core.colors'),
             'cronjob_intervals' => config('core.cronjob_intervals'),
             'metrics_periods' => config('core.metrics_periods'),
+            'pagination_sizes' => config('web.pagination_sizes'),
             'site' => [
                 'types' => config('site.types'),
                 'reserved_user_names' => config('core.reserved_user_names'),

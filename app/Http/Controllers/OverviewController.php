@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Projects\GetOverview;
+use App\Models\Server;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\RouteAttributes\Attributes\Get;
@@ -17,6 +18,7 @@ class OverviewController extends Controller
         $project = user()->currentProject;
 
         $this->authorize('view', $project);
+        $this->authorize('viewAny', [Server::class, $project]);
 
         return Inertia::render('overview/index', [
             'overview' => app(GetOverview::class)->handle($project),

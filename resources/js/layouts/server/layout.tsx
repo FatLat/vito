@@ -86,19 +86,19 @@ export default function ServerLayout({ children }: { children: ReactNode }) {
     {
       title: 'Security',
       items: [
-        { title: 'Security', href: `${base}/security`, onlyActivePath: `${base}/security`, icon: ShieldIcon, isDisabled: isMenuDisabled },
+        { title: 'General', href: `${base}/security`, onlyActivePath: `${base}/security`, icon: ShieldIcon, isDisabled: isMenuDisabled },
         { title: 'Firewall', href: `${base}/firewall`, icon: FlameIcon, isDisabled: isMenuDisabled, hidden: !services['firewall'] },
         { title: 'SSH Keys', href: `${base}/ssh-keys`, icon: KeyIcon, isDisabled: isMenuDisabled },
         { title: 'SSL', href: `${base}/ssl`, icon: LockIcon, isDisabled: isMenuDisabled },
-        { title: 'Command history', href: `${base}/system/commands`, icon: HistoryIcon, isDisabled: isMenuDisabled },
       ],
     },
     {
       title: 'System',
       items: [
-        { title: 'System', href: `${base}/system`, onlyActivePath: `${base}/system`, icon: ServerCogIcon, isDisabled: isMenuDisabled },
+        { title: 'Information', href: `${base}/system`, onlyActivePath: `${base}/system`, icon: ServerCogIcon, isDisabled: isMenuDisabled },
         { title: 'Processes', href: `${base}/system/processes`, icon: ActivityIcon, isDisabled: isMenuDisabled },
         { title: 'Updates', href: `${base}/system/updates`, icon: PackageIcon, isDisabled: isMenuDisabled },
+        { title: 'Command history', href: `${base}/system/commands`, icon: HistoryIcon, isDisabled: isMenuDisabled },
         { title: 'Monitoring', href: `${base}/monitoring`, icon: ChartLineIcon, isDisabled: isMenuDisabled },
         { title: 'Services', href: `${base}/services`, icon: CogIcon, isDisabled: isMenuDisabled },
         { title: 'Network', href: `${base}/network`, icon: NetworkIcon, isDisabled: isMenuDisabled },
@@ -121,7 +121,7 @@ export default function ServerLayout({ children }: { children: ReactNode }) {
   return (
     <Layout secondNavGroups={navGroups} secondNavTitle={page.props.server.name}>
       <ServerHeader server={server} site={page.props.site} />
-      {page.props.site && <SiteTabs server={server} site={page.props.site} />}
+      {page.props.site && <SiteTabs server={server} site={page.props.site} disabled={isMenuDisabled} />}
 
       <div>{children}</div>
     </Layout>

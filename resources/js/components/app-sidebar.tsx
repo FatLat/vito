@@ -45,9 +45,9 @@ import { useConfigs } from '@/stores/bootstrap-store';
 export function AppSidebar({ secondNavGroups, secondNavTitle }: { secondNavGroups: NavGroup[]; secondNavTitle?: string }) {
   const page = usePage<SharedData>();
   const dashboardUrls = useConfigs()?.dashboard_urls;
-  const { toggleSidebar } = useSidebar();
-  const hasSecondNav = secondNavGroups.some((group) => group.items.length > 0);
-  const currentProject = page.props.auth.currentProject;
+  const { toggleSidebar, state } = useSidebar();
+  const hasSecondNav = secondNavGroups.length > 0;
+  const counts = page.props.projectCounts;
 
   const mainNavItems: NavItem[] = [
     {
@@ -64,13 +64,13 @@ export function AppSidebar({ secondNavGroups, secondNavTitle }: { secondNavGroup
       title: 'Servers',
       href: '/servers',
       icon: ServerIcon,
-      badge: currentProject?.servers_count,
+      badge: counts?.servers,
     },
     {
       title: 'Sites',
       href: '/sites',
       icon: MousePointerClickIcon,
-      badge: currentProject?.sites_count,
+      badge: counts?.sites,
     },
     {
       title: 'Backups',
@@ -187,7 +187,7 @@ export function AppSidebar({ secondNavGroups, secondNavTitle }: { secondNavGroup
           <SidebarMenu>
             {!hasSecondNav && (
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={toggleSidebar} tooltip={{ children: 'Toggle menu', hidden: false }}>
+                <SidebarMenuButton onClick={toggleSidebar} aria-expanded={state === 'expanded'} tooltip={{ children: 'Toggle menu', hidden: false }}>
                   <PanelLeftIcon />
                   <span className="sr-only">Toggle menu</span>
                 </SidebarMenuButton>
@@ -219,94 +219,92 @@ export function AppSidebar({ secondNavGroups, secondNavTitle }: { secondNavGroup
             </div>
           </SidebarHeader>
           <SidebarContent>
-            {secondNavGroups
-              .filter((group) => group.items.some((item) => !item.hidden))
-              .map((group) => (
-                <SidebarGroup key={group.title || 'navigation'}>
-                  {group.title && <SidebarGroupLabel>{group.title}</SidebarGroupLabel>}
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      {group.items.map((item) => {
-                        const isActive = item.onlyActivePath ? currentPath() === item.href : currentPath().startsWith(item.href);
+            {secondNavGroups.map((group, index) => (
+              <SidebarGroup key={`${index}-${group.title}`}>
+                {group.title && <SidebarGroupLabel>{group.title}</SidebarGroupLabel>}
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {group.items.map((item) => {
+                      const isActive = item.onlyActivePath ? currentPath() === item.href : currentPath().startsWith(item.href);
 
-                        if (item.children && item.children.length > 0) {
-                          const groupActive =
-                            isActive ||
-                            item.children.some((childItem) =>
-                              childItem.hidden
-                                ? false
-                                : childItem.onlyActivePath
-                                  ? currentPath() === childItem.href
-                                  : currentPath().startsWith(childItem.href),
-                            );
-
-                          return (
-                            <Collapsible key={`${item.title}-${item.href}`} defaultOpen={groupActive} className="group/collapsible">
-                              <SidebarMenuItem>
-                                <CollapsibleTrigger asChild>
-                                  <SidebarMenuButton disabled={item.isDisabled || false} hidden={item.hidden}>
-                                    {item.icon && <item.icon />}
-                                    <span>{item.title}</span>
-                                    <ChevronRightIcon className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                                  </SidebarMenuButton>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent>
-                                  <SidebarMenuSub>
-                                    {item.children.map((childItem) => (
-                                      <SidebarMenuSubItem key={`${childItem.title}-${childItem.href}`} hidden={childItem.hidden}>
-                                        <SidebarMenuButton
-                                          asChild
-                                          isActive={
-                                            childItem.onlyActivePath ? currentPath() === childItem.href : currentPath().startsWith(childItem.href)
-                                          }
-                                        >
-                                          {childItem.external ? (
-                                            <a href={childItem.href} target="_blank">
-                                              {childItem.icon && <childItem.icon />}
-                                              <span>{childItem.title}</span>
-                                            </a>
-                                          ) : (
-                                            <Link href={childItem.href}>
-                                              {childItem.icon && <childItem.icon />}
-                                              <span>{childItem.title}</span>
-                                            </Link>
-                                          )}
-                                        </SidebarMenuButton>
-                                      </SidebarMenuSubItem>
-                                    ))}
-                                  </SidebarMenuSub>
-                                </CollapsibleContent>
-                              </SidebarMenuItem>
-                            </Collapsible>
+                      if (item.children && item.children.length > 0) {
+                        const groupActive =
+                          isActive ||
+                          item.children.some((childItem) =>
+                            childItem.hidden
+                              ? false
+                              : childItem.onlyActivePath
+                                ? currentPath() === childItem.href
+                                : currentPath().startsWith(childItem.href),
                           );
-                        }
 
                         return (
-                          <SidebarMenuItem key={`${item.title}-${item.href}`} hidden={item.hidden}>
-                            <SidebarMenuButton isActive={isActive} asChild>
-                              {item.external ? (
-                                <a href={item.href} target="_blank">
+                          <Collapsible key={`${item.title}-${item.href}`} defaultOpen={groupActive} className="group/collapsible">
+                            <SidebarMenuItem>
+                              <CollapsibleTrigger asChild>
+                                <SidebarMenuButton disabled={item.isDisabled || false} hidden={item.hidden}>
                                   {item.icon && <item.icon />}
                                   <span>{item.title}</span>
-                                </a>
-                              ) : (
-                                <Link
-                                  href={item.isDisabled ? '#' : item.href}
-                                  disabled={item.isDisabled || false}
-                                  className={item.isDisabled ? 'pointer-events-none opacity-50' : ''}
-                                >
-                                  {item.icon && <item.icon />}
-                                  <span>{item.title}</span>
-                                </Link>
-                              )}
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
+                                  <ChevronRightIcon className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                                </SidebarMenuButton>
+                              </CollapsibleTrigger>
+                              <CollapsibleContent>
+                                <SidebarMenuSub>
+                                  {item.children.map((childItem) => (
+                                    <SidebarMenuSubItem key={`${childItem.title}-${childItem.href}`} hidden={childItem.hidden}>
+                                      <SidebarMenuButton
+                                        asChild
+                                        isActive={
+                                          childItem.onlyActivePath ? currentPath() === childItem.href : currentPath().startsWith(childItem.href)
+                                        }
+                                      >
+                                        {childItem.external ? (
+                                          <a href={childItem.href} target="_blank">
+                                            {childItem.icon && <childItem.icon />}
+                                            <span>{childItem.title}</span>
+                                          </a>
+                                        ) : (
+                                          <Link href={childItem.href}>
+                                            {childItem.icon && <childItem.icon />}
+                                            <span>{childItem.title}</span>
+                                          </Link>
+                                        )}
+                                      </SidebarMenuButton>
+                                    </SidebarMenuSubItem>
+                                  ))}
+                                </SidebarMenuSub>
+                              </CollapsibleContent>
+                            </SidebarMenuItem>
+                          </Collapsible>
                         );
-                      })}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </SidebarGroup>
-              ))}
+                      }
+
+                      return (
+                        <SidebarMenuItem key={`${item.title}-${item.href}`} hidden={item.hidden}>
+                          <SidebarMenuButton isActive={isActive} asChild>
+                            {item.external ? (
+                              <a href={item.href} target="_blank">
+                                {item.icon && <item.icon />}
+                                <span>{item.title}</span>
+                              </a>
+                            ) : (
+                              <Link
+                                href={item.isDisabled ? '#' : item.href}
+                                disabled={item.isDisabled || false}
+                                className={item.isDisabled ? 'pointer-events-none opacity-50' : ''}
+                              >
+                                {item.icon && <item.icon />}
+                                <span>{item.title}</span>
+                              </Link>
+                            )}
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            ))}
           </SidebarContent>
         </Sidebar>
       )}

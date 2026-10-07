@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { useConfigs } from '@/stores/bootstrap-store';
 import {
   ChevronLeft,
   ChevronRight,
@@ -19,13 +20,11 @@ import {
   LoaderCircleIcon,
 } from 'lucide-react';
 
-const PAGE_SIZES = [10, 25, 50];
-
 function changePageSize(tableData: InertiaTableData, size: string): void {
-  const params = Object.fromEntries(new URLSearchParams(window.location.search));
-  params.per_page = size;
-  params[tableData.identifier ? `${tableData.identifier}Page` : 'page'] = '1';
-  router.get(window.location.pathname, params, { preserveScroll: true, preserveState: true });
+  const params = new URLSearchParams(window.location.search);
+  params.set('per_page', size);
+  params.set(tableData.identifier ? `${tableData.identifier}Page` : 'page', '1');
+  router.get(`${window.location.pathname}?${params}`, {}, { preserveScroll: true, preserveState: true });
 }
 
 interface VitoTableProps extends Omit<InertiaTableProps, 'tableData'> {
@@ -69,6 +68,7 @@ function vitoCellRenderer({ row, value, displays, defaultRender }: CellRenderPro
 }
 
 export function VitoTable({ tableData, children, modal, isFetching, ...props }: VitoTableProps) {
+  const pageSizes = [...new Set([...(useConfigs()?.pagination_sizes ?? []), tableData.meta?.per_page ?? 10])].sort((a, b) => a - b);
   const { columns, searchTerm, onSearch, onSort, getSortState, onPageChange, isProcessing } = useTable({
     tableData,
     modal,
@@ -170,7 +170,7 @@ export function VitoTable({ tableData, children, modal, isFetching, ...props }: 
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {PAGE_SIZES.map((size) => (
+                    {pageSizes.map((size) => (
                       <SelectItem key={size} value={String(size)}>
                         {size}
                       </SelectItem>

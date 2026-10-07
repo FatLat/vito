@@ -9,12 +9,15 @@ use App\Models\Server;
 use App\Models\Site;
 use App\Models\Ssl;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Arr;
 
 class GetOverview
 {
     private const RECENT_LIMIT = 5;
 
     private const SSL_WARNING_DAYS = 14;
+
+    private const ATTENTION_LIMIT = 10;
 
     /**
      * @return array{
@@ -77,12 +80,17 @@ class GetOverview
      */
     private function backupProblems(Project $project): array
     {
-        return $project->backups()->where('enabled', true)->with(['server', 'database', 'lastFile'])->get()
-            ->map(fn (Backup $backup): ?array => match (true) {
-                $backup->health_alerted_at !== null => $this->backupRow($backup, 'overdue'),
-                $backup->lastFile?->status === BackupFileStatus::FAILED => $this->backupRow($backup, 'failed'),
-                default => null,
-            })->filter()->values()->all();
+        return $project->backups()
+            ->where('enabled', true)
+            ->where(fn (Builder $query) => $query
+                ->whereNotNull('health_alerted_at')
+                ->orWhereHas('lastFile', fn (Builder $file) => $file->where('status', BackupFileStatus::FAILED)))
+            ->with(['server', 'database', 'lastFile'])
+            ->orderBy('backups.id')
+            ->limit(self::ATTENTION_LIMIT)
+            ->get()
+            ->map(fn (Backup $backup): array => $this->backupRow($backup, $backup->health_alerted_at !== null ? 'overdue' : 'failed'))
+            ->values()->all();
     }
 
     /**
@@ -112,14 +120,14 @@ class GetOverview
             ->where('expires_at', '<=', now()->addDays(self::SSL_WARNING_DAYS))
             ->with('site')
             ->orderBy('expires_at')
-            ->limit(10)
+            ->limit(self::ATTENTION_LIMIT)
             ->get()
             ->map(fn (Ssl $ssl): array => [
                 'id' => $ssl->id,
                 'server_id' => $ssl->server_id ?? $ssl->site?->server_id,
                 'site_id' => $ssl->site_id,
-                'domain' => $ssl->site->domain ?? (is_array($ssl->domains) ? ($ssl->domains[0] ?? '-') : ($ssl->domains ?? '-')),
-                'expires_at' => $ssl->expires_at?->toIso8601String() ?? '',
+                'domain' => $ssl->site->domain ?? Arr::wrap($ssl->domains)[0] ?? '-',
+                'expires_at' => (string) $ssl->expires_at?->toIso8601String(),
             ])->values()->all();
     }
 }

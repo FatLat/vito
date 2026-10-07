@@ -41,8 +41,8 @@ test('overview shows counts, recent servers and sites', function () {
             ->where('overview.servers.0.id', $this->server->id)
             ->where('overview.sites.0.domain', $this->site->domain)
             ->where('overview.sites.0.server_name', $this->server->name)
-            ->where('auth.currentProject.servers_count', 1)
-            ->where('auth.currentProject.sites_count', 1));
+            ->where('projectCounts.servers', 1)
+            ->where('projectCounts.sites', 1));
 });
 
 test('overview lists overdue and failed backups only', function () {
@@ -99,3 +99,14 @@ test('rows per page come from the query string', function (int $requested, int $
     'allowed' => [25, 25],
     'not allowed' => [1000, 10],
 ]);
+
+test('rows per page ignores array input and does not leak into later requests', function () {
+    $this->actingAs($this->user);
+
+    $this->get(route('servers').'?per_page[]=25')
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('servers.meta.per_page', 10));
+
+    $this->get(route('servers', ['per_page' => 50]))->assertOk();
+
+    expect(config('web.pagination_size'))->toBe(10);
+});
