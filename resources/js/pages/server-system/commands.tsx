@@ -19,6 +19,7 @@ export default function Commands() {
   const [source, setSource] = useState<CommandHistoryEntry['source']>('sudo');
   const [search, setSearch] = useState('');
   const query = useSystemData<CommandHistoryEntry[]>(page.props.server, 'commands/json');
+  const columns = source === 'sudo' ? 3 : 2;
   const term = search.trim().toLowerCase();
   const entries = (query.data ?? []).filter(
     (entry) => entry.source === source && (!term || entry.command.toLowerCase().includes(term) || entry.user.toLowerCase().includes(term)),
@@ -46,7 +47,7 @@ export default function Commands() {
           </TabsList>
         </Tabs>
 
-        <QueryState query={query} cells={3} />
+        <QueryState query={query} cells={columns} />
 
         {query.data && (
           <div className="rounded-md border shadow-xs">
@@ -61,14 +62,14 @@ export default function Commands() {
               <TableBody>
                 {entries.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-muted-foreground text-center">
+                    <TableCell colSpan={columns} className="text-muted-foreground text-center">
                       No commands found
                     </TableCell>
                   </TableRow>
                 )}
                 {entries.map((entry, index) => (
-                  <TableRow key={index}>
-                    {source === 'sudo' && <TableCell className="whitespace-nowrap">{entry.time}</TableCell>}
+                  <TableRow key={`${entry.time}-${entry.user}-${index}`}>
+                    {source === 'sudo' && <TableCell className="whitespace-nowrap">{entry.time ?? '-'}</TableCell>}
                     <TableCell className="whitespace-nowrap">
                       {entry.user}
                       {entry.run_as && entry.run_as !== entry.user && <span className="text-muted-foreground"> → {entry.run_as}</span>}

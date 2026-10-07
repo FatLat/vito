@@ -51,7 +51,7 @@ class ServerSystemController extends Controller
     {
         $this->authorize('manage', $server);
 
-        app(ClearLogFile::class)->clear($server, $request->all());
+        app(ClearLogFile::class)->clear($server, $request->only('path'));
 
         return back()->with('success', __('Log file cleared.'));
     }
@@ -83,7 +83,7 @@ class ServerSystemController extends Controller
     {
         $this->authorize('manage', $server);
 
-        app(KillProcess::class)->kill($server, $request->all());
+        app(KillProcess::class)->kill($server, $request->only(['pid', 'signal']));
 
         return back()->with('success', __('Signal sent to the process.'));
     }

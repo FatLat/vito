@@ -1,10 +1,12 @@
 <?php
 
+use App\Actions\Server\System\ClearLogFile;
 use App\Enums\ServerStatus;
 use App\Enums\UserRole;
 use App\Facades\SSH;
 use App\Models\ServerLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
@@ -64,7 +66,9 @@ test('clear a log file', function () {
     $this->post(route('server-system.logs.clear', $this->server), ['path' => '/var/log/nginx/access.log'])
         ->assertSessionDoesntHaveErrors();
 
+    SSH::assertExecutedContains('realpath -e -- "$FILE_PATH"');
     SSH::assertExecutedContains('/var/log/nginx/access.log');
+    $this->assertDatabaseHas('server_logs', ['server_id' => $this->server->id, 'type' => 'clear-log']);
 });
 
 test('only files under /var/log can be cleared', function (string $path) {
@@ -195,3 +199,19 @@ test('read only user cannot manage processes or see command history', function (
     ['get', 'server-system.commands'],
     ['get', 'server-system.commands.json'],
 ]);
+
+test('system refuses unsupported signals even without the action', function () {
+    SSH::fake();
+
+    expect(fn () => $this->server->system()->kill(812, 'HUP'))->toThrow(InvalidArgumentException::class)
+        ->and(fn () => $this->server->system()->kill(1, 'TERM'))->toThrow(InvalidArgumentException::class)
+        ->and(SSH::getExecutedCommands())->toBeEmpty();
+});
+
+test('a trailing newline does not pass log path validation', function () {
+    SSH::fake();
+
+    expect(fn () => app(ClearLogFile::class)->clear($this->server, ['path' => "/var/log/syslog\n"]))
+        ->toThrow(ValidationException::class)
+        ->and(SSH::getExecutedCommands())->toBeEmpty();
+});

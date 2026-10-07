@@ -18,9 +18,9 @@ class ClearLogFile
     public function clear(Server $server, array $input): void
     {
         $validated = Validator::make($input, [
-            'path' => ['required', 'string', 'max:255', 'regex:/^\/var\/log\/[A-Za-z0-9._\/-]+$/', 'not_regex:/(^|\/)\.\.(\/|$)/'],
+            'path' => ['required', 'string', 'max:255', 'regex:/^\/var\/log\/[A-Za-z0-9._\/-]+\z/', 'not_regex:/(^|\/)\.\.(\/|$)/'],
         ])->validate();
 
-        $server->os()->clearFile($validated['path']);
+        $server->system()->clearLog($validated['path']);
     }
 }

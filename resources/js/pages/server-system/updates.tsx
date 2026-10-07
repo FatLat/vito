@@ -50,7 +50,7 @@ export default function Updates() {
               onClick={() =>
                 confirm(
                   `Restart ${server.name}?`,
-                  'Sites and services on this server will be unavailable while it restarts.',
+                  'Are you sure you want to restart this server? Sites and services hosted on this server will be unavailable while it restarts. Connections in flight will be dropped.',
                   'Restart',
                   `/servers/${server.id}/reboot`,
                 )
@@ -84,7 +84,7 @@ export default function Updates() {
                 onClick={() =>
                   confirm(
                     `Update ${server.name}?`,
-                    'Pending package updates will be installed. This can take several minutes and may briefly restart services.',
+                    'Apply the pending OS package updates to this server? The upgrade can take several minutes and may briefly restart affected services. A server restart may be required afterwards.',
                     'Update',
                     `/servers/${server.id}/update`,
                   )
@@ -102,7 +102,7 @@ export default function Updates() {
                 onClick={() =>
                   confirm(
                     `Update kernel on ${server.name}?`,
-                    'The kernel packages will be installed and the server will restart to boot the new kernel.',
+                    'This installs the pending kernel packages (a full upgrade that may install or remove packages), then restarts the server to boot the new kernel. The server will be unavailable for a minute or two and connections in flight will be dropped.',
                     'Update & restart',
                     `/servers/${server.id}/update-kernel`,
                   )
@@ -129,9 +129,11 @@ export default function Updates() {
               <TableBody>
                 {query.data.packages.map((pkg) => (
                   <TableRow key={pkg.name}>
-                    <TableCell className="flex items-center gap-2">
-                      {pkg.name}
-                      {pkg.kernel && <Badge variant="warning">kernel</Badge>}
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {pkg.name}
+                        {pkg.kernel && <Badge variant="warning">kernel</Badge>}
+                      </div>
                     </TableCell>
                     <TableCell className="font-mono text-xs">{pkg.current}</TableCell>
                     <TableCell className="font-mono text-xs">{pkg.candidate}</TableCell>

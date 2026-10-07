@@ -10,7 +10,7 @@ import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useDialog } from '@/hooks/use-dialog';
 import { formatBytes } from '@/lib/utils';
 import QueryState from '@/pages/server-system/components/query-state';
@@ -67,7 +67,7 @@ export default function SystemIndex() {
       <Container className="max-w-5xl">
         <HeaderContainer>
           <Heading title="System" description="Server details, disk usage and the largest log files" />
-          <Button variant="outline" onClick={() => query.refetch()} disabled={query.isFetching}>
+          <Button variant="outline" onClick={() => query.refetch()} disabled={query.isFetching} aria-label="Refresh">
             <RefreshCwIcon className={query.isFetching ? 'animate-spin' : ''} />
             <span className="hidden lg:block">Refresh</span>
           </Button>
@@ -101,7 +101,7 @@ export default function SystemIndex() {
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
                 {data.disks.map((disk) => {
-                  const percent = disk.size ? Math.round((disk.used / disk.size) * 100) : 0;
+                  const percent = disk.size ? Math.min(100, Math.round((disk.used / disk.size) * 100)) : 0;
                   return (
                     <div key={disk.mount} className="flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-2 text-sm">

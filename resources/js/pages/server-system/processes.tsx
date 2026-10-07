@@ -23,21 +23,21 @@ export default function Processes() {
   const query = useSystemData<SystemProcess[]>(page.props.server, 'processes/json', { refetchInterval: 10_000 });
   const term = search.trim().toLowerCase();
   const processes = (query.data ?? []).filter(
-    (process) => !term || process.command.toLowerCase().includes(term) || process.user.toLowerCase().includes(term) || String(process.pid) === term,
+    (proc) => !term || proc.command.toLowerCase().includes(term) || proc.user.toLowerCase().includes(term) || String(proc.pid) === term,
   );
 
-  const kill = (process: SystemProcess, signal: 'TERM' | 'KILL') => {
+  const kill = (proc: SystemProcess, signal: 'TERM' | 'KILL') => {
     dialog.confirm.open({
       title: signal === 'TERM' ? 'Stop process' : 'Force kill process',
       description:
         signal === 'TERM'
-          ? `Process ${process.pid} will be asked to stop (SIGTERM).`
-          : `Process ${process.pid} will be killed immediately (SIGKILL). Unsaved work in it is lost.`,
+          ? `Process ${proc.pid} will be asked to stop (SIGTERM).`
+          : `Process ${proc.pid} will be killed immediately (SIGKILL). Unsaved work in it is lost.`,
       variant: 'destructive',
       confirmLabel: signal === 'TERM' ? 'Stop' : 'Kill',
       method: 'post',
       url: `/servers/${page.props.server.id}/system/processes/kill`,
-      data: { pid: process.pid, signal },
+      data: { pid: proc.pid, signal },
       onSuccess: () => query.refetch(),
     });
   };
@@ -74,28 +74,35 @@ export default function Processes() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {processes.map((process) => (
-                  <TableRow key={process.pid}>
-                    <TableCell>{process.pid}</TableCell>
-                    <TableCell>{process.user}</TableCell>
-                    <TableCell className="text-right">{process.cpu.toFixed(1)}%</TableCell>
-                    <TableCell className="text-right whitespace-nowrap">
-                      {formatBytes(process.rss)} ({process.memory.toFixed(1)}%)
+                {processes.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-muted-foreground text-center">
+                      No processes found
                     </TableCell>
-                    <TableCell className="whitespace-nowrap">{humanizeSeconds(process.elapsed)}</TableCell>
-                    <TableCell className="max-w-md truncate font-mono text-xs" title={process.command}>
-                      {process.command}
+                  </TableRow>
+                )}
+                {processes.map((proc) => (
+                  <TableRow key={proc.pid}>
+                    <TableCell>{proc.pid}</TableCell>
+                    <TableCell>{proc.user}</TableCell>
+                    <TableCell className="text-right">{proc.cpu.toFixed(1)}%</TableCell>
+                    <TableCell className="text-right whitespace-nowrap">
+                      {formatBytes(proc.rss)} ({proc.memory.toFixed(1)}%)
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">{humanizeSeconds(proc.elapsed)}</TableCell>
+                    <TableCell className="max-w-md truncate font-mono text-xs" title={proc.command}>
+                      {proc.command}
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu modal={false}>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0" aria-label={`Actions for process ${process.pid}`}>
+                          <Button variant="ghost" className="h-8 w-8 p-0" aria-label={`Actions for process ${proc.pid}`}>
                             <MoreVerticalIcon />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onSelect={() => kill(process, 'TERM')}>Stop (SIGTERM)</DropdownMenuItem>
-                          <DropdownMenuItem variant="destructive" onSelect={() => kill(process, 'KILL')}>
+                          <DropdownMenuItem onSelect={() => kill(proc, 'TERM')}>Stop (SIGTERM)</DropdownMenuItem>
+                          <DropdownMenuItem variant="destructive" onSelect={() => kill(proc, 'KILL')}>
                             Kill (SIGKILL)
                           </DropdownMenuItem>
                         </DropdownMenuContent>
